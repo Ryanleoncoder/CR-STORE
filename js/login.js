@@ -29,8 +29,29 @@ supabase.auth.onAuthStateChange((event, session) => {
   }
 });
 
+
+tratarErroDeLink();
+
 abaEntrar.addEventListener("click", () => trocarAba(true));
 abaPrimeiro.addEventListener("click", () => trocarAba(false));
+
+function tratarErroDeLink() {
+  const params = new URLSearchParams(window.location.hash.slice(1));
+  const erro = params.get("error_code") || params.get("error");
+  if (!erro) return;
+
+  const mensagens = {
+    otp_expired: "Esse link expirou ou já foi usado. Peça um novo abaixo.",
+    access_denied: "Não foi possível validar o link. Peça um novo abaixo.",
+  };
+
+ 
+  history.replaceState(null, "", window.location.pathname);
+
+  
+  document.querySelector("#toggle-magico").click();
+  mostrarErro(mensagens[erro] || "Não foi possível entrar. Tente novamente.");
+}
 
 function trocarAba(entrar) {
   abaEntrar.classList.toggle("ativa", entrar);
