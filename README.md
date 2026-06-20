@@ -1,4 +1,4 @@
-# CR Store
+<img src="https://cr-store.vercel.app/assets/images/crcoins.webp" alt="CR Coins" width="64"> CR Store
 
 Plataforma de recompensas interna: carteira de pontos e resgate de produtos.
 Acesso por whitelist. Primeiro acesso valida o e-mail por código (Supabase Auth);
