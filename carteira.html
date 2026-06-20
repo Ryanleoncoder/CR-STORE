@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Carteira · CR Store</title>
+    <link rel="icon" type="image/webp" href="/assets/images/crcoins.webp" />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <header id="topo"></header>
+
+    <main class="conteudo">
+      <section class="saldo-card">
+        <div class="wc-blob1"></div>
+        <div class="wc-blob2"></div>
+        <span>Seu saldo</span>
+        <strong><span id="saldo" class="saldo-num">0</span> CRcoins <img src="/assets/images/crcoins.webp" class="coin-token coin-token-lg" alt="CRC" /></strong>
+        <div class="saldo-stats">
+          <div>
+            <span>Total ganho</span>
+            <strong id="total-ganho">0 <small>CRC</small></strong>
+          </div>
+          <div>
+            <span>Total gasto</span>
+            <strong id="total-gasto">0 <small>CRC</small></strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="bloco" style="padding: 20px;">
+        <div class="actions">
+          <a href="loja.html" class="act">
+            <div class="act-ico" style="background: #fde3cf; color: var(--orange);"><i class="ph-fill ph-shopping-cart"></i></div>
+            <div class="act-lbl">Gastar pontos</div>
+          </a>
+          <button class="act" id="btn-transferir" type="button">
+            <div class="act-ico" style="background: #e8f5e9; color: var(--pos);"><i class="ph-fill ph-paper-plane-tilt"></i></div>
+            <div class="act-lbl">Transferir</div>
+          </button>
+          <button class="act" id="btn-scroll-extrato" type="button">
+            <div class="act-ico" style="background: #fffaec; color: var(--yellow);"><i class="ph-fill ph-receipt"></i></div>
+            <div class="act-lbl">Extrato</div>
+          </button>
+          <button class="act" id="btn-resgatar" type="button">
+            <div class="act-ico" style="background: #fff4dc; color: #b9820a;"><i class="ph-fill ph-ticket"></i></div>
+            <div class="act-lbl">Resgatar código</div>
+          </button>
+          <button class="act" id="btn-ajuda" type="button">
+            <div class="act-ico" style="background: #ede7f6; color: #673ab7;"><i class="ph-fill ph-question"></i></div>
+            <div class="act-lbl">Como funciona</div>
+          </button>
+        </div>
+      </section>
+
+      <section class="bloco">
+        <h2 id="titulo-extrato">Extrato</h2>
+        <ul id="extrato" class="extrato"></ul>
+      </section>
+    </main>
+
+    <!-- Modal de Transferência (estilo Pix, em passos) -->
+    <div id="modal-transferir" class="modal-bg" hidden>
+      <div class="modal">
+        <div class="modal-head">
+          <h3 id="transf-titulo">Para quem transferir?</h3>
+          <button class="modal-close" id="btn-fechar-modal">✕</button>
+        </div>
+        <div class="modal-body">
+          <!-- Passo 1: destinatário -->
+          <div id="transf-passo-quem">
+            <div class="search-pill-inline">
+              <span><i class="ph-fill ph-magnifying-glass"></i></span>
+              <input id="busca" placeholder="Buscar por nome, @usuário ou e-mail" autocomplete="off" />
+            </div>
+            <p class="transf-hint">Contatos</p>
+            <ul id="resultados" class="resultados"></ul>
+          </div>
+
+          <!-- Passo 2: valor + confirmação -->
+          <div id="transf-passo-valor" hidden>
+            <button type="button" id="trocar" class="transf-dest">
+              <span class="transf-dest-av" id="dest-avatar">?</span>
+              <span class="transf-dest-info">
+                <strong id="destinatario-nome"></strong>
+                <small>Trocar destinatário</small>
+              </span>
+              <span class="transf-dest-arrow">↺</span>
+            </button>
+
+            <form id="transf-form">
+              <label class="transf-valor-label">Quanto você quer enviar?</label>
+              <div class="transf-valor-wrap">
+                <img src="/assets/images/crcoins.webp" class="coin-token" alt="CRC" />
+                <input id="valor" type="number" min="1" placeholder="0" required />
+              </div>
+              <input id="mensagem" maxlength="140" placeholder="Mensagem (opcional)" />
+              <button type="submit" id="btn-confirmar-transf">Transferir</button>
+            </form>
+          </div>
+
+          <p id="transf-aviso" class="aviso"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de Extrato Detalhado -->
+    <div id="modal-extrato" class="modal-bg" hidden>
+      <div class="modal" style="max-width: 500px;">
+        <div class="modal-head">
+          <h3>Extrato Detalhado</h3>
+          <button class="modal-close" id="btn-fechar-extrato">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="extrato-filtros" style="display: flex; gap: 8px; margin-bottom: 12px; width: 100%;">
+            <button class="btn-filtro ativo" data-filtro="todos" style="padding: 6px 12px; font-size: 12px; flex: 1;">Todos</button>
+            <button class="btn-filtro" data-filtro="entradas" style="padding: 6px 12px; font-size: 12px; flex: 1;">Entradas</button>
+            <button class="btn-filtro" data-filtro="saidas" style="padding: 6px 12px; font-size: 12px; flex: 1;">Saídas</button>
+          </div>
+          <div style="max-height: 300px; overflow-y: auto; width: 100%;">
+            <ul id="extrato-detalhado-lista" class="extrato"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de Ajuda -->
+    <div id="modal-ajuda" class="modal-bg" hidden>
+      <div class="modal">
+        <div class="modal-head">
+          <h3>Como funciona?</h3>
+          <button class="modal-close" id="btn-fechar-ajuda">✕</button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size: 14px; line-height: 1.6; color: var(--body);">
+            1. <i class="ph-fill ph-shopping-cart" style="color: var(--orange);"></i> <strong>Gastar pontos</strong>: Vá até a loja e escolha as recompensas que deseja resgatar.<br/><br/>
+            2. <i class="ph-fill ph-paper-plane-tilt" style="color: var(--pos);"></i> <strong>Transferir</strong>: Digite o nome de usuário ou e-mail de um colega para enviar pontos da sua carteira para a dele.<br/><br/>
+            3. <i class="ph-fill ph-receipt" style="color: var(--yellow);"></i> <strong>Extrato</strong>: Monitore suas entradas e saídas de pontos em tempo real.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de Resgatar Código -->
+    <div id="modal-resgatar" class="modal-bg" hidden>
+      <div class="modal">
+        <div class="modal-head">
+          <h3>Resgatar código</h3>
+          <button class="modal-close" id="btn-fechar-resgatar">✕</button>
+        </div>
+        <div class="modal-body">
+          <form id="resgatar-form">
+            <div class="field">
+              <label for="resgatar-codigo">Digite o código da campanha</label>
+              <input id="resgatar-codigo" placeholder="Ex: META50" style="text-transform: uppercase;" autocomplete="off" />
+            </div>
+            <button type="submit">Resgatar CRcoins</button>
+          </form>
+          <p id="resgatar-aviso" class="aviso"></p>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="js/carteira.js"></script>
+  </body>
+</html>

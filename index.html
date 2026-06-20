@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CR Store</title>
+    <link rel="icon" type="image/webp" href="/assets/images/crcoins.webp" />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body class="welcome-body">
+    <div class="w-topbar">
+      <div class="logo"><img src="/assets/images/crcoins.webp" class="logo-coin" alt="" />CR <b>Store</b></div>
+      <span class="w-tagline">Central de Relacionamento</span>
+    </div>
+
+    <div class="w-hero">
+      <!-- Left: visual grid -->
+      <div class="w-left" id="emojiGrid"></div>
+
+      <!-- Right: form -->
+      <div class="w-right">
+        <div class="w-panel">
+          <h1>Bem-vindo à <span class="logo">CR <b>Store</b></span> ✨</h1>
+          <p class="w-sub">Acumule pontos e troque por recompensas exclusivas.</p>
+
+          <div class="abas">
+            <button id="aba-entrar" class="aba ativa" type="button">Entrar</button>
+            <button id="aba-primeiro" class="aba" type="button">Primeiro acesso</button>
+          </div>
+
+          <div id="bloco-entrar">
+            <form id="form-entrar">
+              <div class="field">
+                <label for="email-entrar">E-mail</label>
+                <input id="email-entrar" type="email" placeholder="seu@email.com" required />
+              </div>
+              <div class="field">
+                <label for="senha-entrar">Senha</label>
+                <input id="senha-entrar" type="password" placeholder="Digite sua senha" required />
+              </div>
+              <button type="submit">Entrar</button>
+            </form>
+
+            <div class="divider">
+              <div class="dline"></div><span>ou</span><div class="dline"></div>
+            </div>
+
+            <button id="toggle-magico" class="btn-secundario" type="button" style="width: 100%; text-align: center; margin-top: 0; display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <i class="ph-fill ph-magic-wand"></i> Entrar sem senha
+            </button>
+
+            <div id="form-magico" hidden>
+              <div id="mg-email" class="passo">
+                <p class="sub">Enviaremos um código de acesso para seu e-mail.</p>
+                <div class="field">
+                  <label for="email-magico">E-mail</label>
+                  <input id="email-magico" type="email" placeholder="seu@email.com" />
+                </div>
+                <button id="mg-enviar" type="button">Enviar código</button>
+              </div>
+              <div id="mg-codigo" class="passo" hidden>
+                <p class="sub">Digite o código de 6 dígitos enviado para seu e-mail.</p>
+                <div class="field">
+                  <label for="mg-cod">Código de 6 dígitos</label>
+                  <input id="mg-cod" inputmode="numeric" maxlength="6" placeholder="000000" style="text-align: center; letter-spacing: 4px; font-size: 18px; font-weight: 700;" />
+                </div>
+                <button id="mg-validar" type="button">Entrar</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="form-primeiro" hidden>
+            <form id="form-primeiro-acesso">
+              <p class="sub" style="margin-bottom: 12px;">Crie a senha que você usará para entrar com seu e-mail cadastrado.</p>
+              <div class="field">
+                <label for="email-primeiro">E-mail</label>
+                <input id="email-primeiro" type="email" placeholder="seu@email.com" required />
+              </div>
+              <div class="field">
+                <label for="nova-senha">Nova senha</label>
+                <input id="nova-senha" type="password" placeholder="Mínimo de 6 caracteres" minlength="6" required />
+              </div>
+              <div class="field">
+                <label for="nova-senha2">Confirmar nova senha</label>
+                <input id="nova-senha2" type="password" placeholder="Repita a nova senha" minlength="6" required />
+              </div>
+              <button type="submit" style="margin-top: 8px;">Cadastrar e Entrar</button>
+            </form>
+          </div>
+
+          <p id="aviso" class="aviso"></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="flaticon-credit">
+      <i class="ph-fill ph-palette"></i>
+      <span>Ilustrações por
+        <a href="https://www.flaticon.com/free-stickers/groceries" target="_blank" rel="noopener">Stickers · Flaticon</a>
+      </span>
+    </div>
+
+    <div class="dev-credit">
+      <span>Desenvolvido por</span>
+      <a href="https://github.com/Ryanleoncoder" target="_blank" rel="noopener">
+        <i class="ph-fill ph-github-logo"></i> Ryan Cruz
+      </a>
+    </div>
+
+    <script type="module" src="js/login.js"></script>
+    <script>
+      // Emoji grid animation (decorative)
+      (function () {
+        const emojis = ['💰', '🎁', '☕', '👕', '🧴', '🏆', '🎯', '⭐', '💎', '🎉', '🧢', '🔥'];
+        const colors = ['#fff0f5', '#f5f0ff', '#f0fff8', '#fffaec', '#fff8f0', '#f0f8f4', '#fff0fb', '#f9f3ee'];
+        const grid = document.getElementById('emojiGrid');
+        const TOTAL_STICKERS = 10;
+        for (let i = 0; i < TOTAL_STICKERS; i++) {
+          const tile = document.createElement('div');
+          tile.className = 'emoji-tile sticker-tile';
+          tile.style.animationDelay = (i * 0.08) + 's';
+          const img = document.createElement('img');
+          img.className = 'sticker-img';
+          img.alt = '';
+          img.src = `/assets/images/stickers/${i + 1}.png`;
+          img.onerror = () => {
+            // fallback: emoji colorido se o sticker faltar
+            tile.classList.remove('sticker-tile');
+            img.remove();
+            tile.style.background = colors[i % colors.length];
+            tile.textContent = emojis[i % emojis.length];
+          };
+          tile.appendChild(img);
+          grid.appendChild(tile);
+        }
+      })();
+    </script>
+  </body>
+</html>

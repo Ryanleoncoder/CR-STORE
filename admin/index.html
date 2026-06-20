@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin · CR Store</title>
+    <link rel="icon" type="image/webp" href="/assets/images/crcoins.webp" />
+    <link rel="stylesheet" href="../css/style.css" />
+  </head>
+  <body class="admin-layout">
+    <aside class="sidebar">
+      <div class="logo sidebar-logo">CR <b>Store</b></div>
+        <nav class="sidebar-nav">
+          <a href="../carteira.html" class="sidebar-back-link">← Voltar ao app</a>
+          <button data-sec="usuarios" class="ativo" type="button" style="margin-top: 10px;">Usuários</button>
+          <button data-sec="produtos" type="button">Produtos</button>
+          <button data-sec="acessos" type="button">Acessos</button>
+          <button data-sec="campanhas" type="button">Campanhas</button>
+          <button data-sec="pedidos" type="button">Pedidos</button>
+        </nav>
+      <div class="sidebar-foot">
+        <button id="sair" class="link" style="text-align: left;">Sair</button>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <div id="restrito" hidden>
+        <h1>Acesso restrito</h1>
+        <p class="vazio">Esta área é exclusiva para administradores.</p>
+      </div>
+
+      <div id="painel" hidden>
+        <!-- USUÁRIOS -->
+        <section class="sec" data-sec="usuarios">
+          <h1>Usuários</h1>
+          <input id="usuario-busca" class="busca-inline busca-full" placeholder="Buscar por nome, @usuário ou e-mail..." />
+          <div class="bloco">
+            <p id="lista-aviso" class="aviso"></p>
+            <ul id="usuarios" class="lista-usuarios"></ul>
+          </div>
+        </section>
+
+        <!-- PRODUTOS -->
+        <section class="sec" data-sec="produtos" hidden>
+          <h1>Produtos</h1>
+          <div class="bloco">
+            <h2 id="prod-titulo">Novo produto</h2>
+            <form id="form-produto">
+              <input type="hidden" id="prod-id" />
+              <input id="prod-nome" placeholder="nome do produto" required />
+              <input id="prod-descricao" placeholder="descrição (opcional)" />
+              <div class="form-linha">
+                <input id="prod-preco" type="number" min="0" placeholder="preço (CRcoins)" required />
+                <input id="prod-estoque" type="number" min="0" placeholder="estoque" required />
+              </div>
+              <input id="prod-categoria" placeholder="categoria (ex: Vestuário, Acessórios)" />
+              <label class="form-arquivo">
+                <span>Imagem do produto</span>
+                <div class="file-upload-wrapper">
+                  <svg viewBox="0 0 24 24" fill="none" width="20" height="20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--orange); flex-shrink: 0;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                  <span class="file-upload-text" id="file-name">Escolher imagem do produto...</span>
+                  <input id="prod-imagem" type="file" accept="image/*" style="display: none;" />
+                </div>
+              </label>
+              <label class="form-check toggle">
+                <input id="prod-ativo" type="checkbox" checked />
+                <span>Produto ativo <small>aparece na loja para resgate</small></span>
+              </label>
+              <div class="produto-acoes">
+                <button type="submit" id="prod-salvar">Adicionar produto</button>
+              </div>
+              <p id="prod-aviso" class="aviso"></p>
+            </form>
+          </div>
+          <div class="bloco">
+            <div class="bloco-head">
+              <h2>Cadastrados</h2>
+              <input id="prod-busca" class="busca-inline" placeholder="Buscar produto..." />
+            </div>
+            <ul id="produtos-admin" class="lista-usuarios"></ul>
+          </div>
+        </section>
+
+        <!-- ACESSOS -->
+        <section class="sec" data-sec="acessos" hidden>
+          <h1>Acessos</h1>
+          <div class="bloco">
+            <h2>Autorizar e-mail (whitelist)</h2>
+            <form id="form-whitelist" style="display: flex; flex-direction: column; gap: 16px;">
+              <div class="field">
+                <label for="wl-email">E-mail</label>
+                <input id="wl-email" type="email" placeholder="email@exemplo.com" required />
+              </div>
+              <div class="field">
+                <label for="wl-nome">Nome (opcional)</label>
+                <input id="wl-nome" placeholder="Nome do usuário" />
+              </div>
+              <button type="submit" style="margin-top: 8px; align-self: flex-start;">Adicionar à whitelist</button>
+            </form>
+            <p id="wl-aviso" class="aviso"></p>
+          </div>
+
+          <div class="bloco" style="margin-top: 24px;">
+            <h2>Importar em lote (CSV)</h2>
+            <p class="help-msg" style="margin-bottom: 16px;">Envie um arquivo CSV contendo os e-mails (uma coluna "email" e opcionalmente "nome", ou apenas um e-mail por linha).</p>
+            <div class="csv-upload-zone">
+              <label class="form-arquivo">
+                <span>Clique para selecionar arquivo CSV</span>
+                <input id="wl-csv" type="file" accept=".csv" />
+              </label>
+            </div>
+            <p id="wl-csv-aviso" class="aviso"></p>
+          </div>
+        </section>
+
+        <!-- CAMPANHAS (visual por enquanto) -->
+        <section class="sec" data-sec="campanhas" hidden>
+          <h1>Campanhas</h1>
+          <p class="help-msg" style="margin-bottom: 16px;">
+            Crie <b>códigos</b> ou <b>links</b> que dão CRcoins (ex: "bateu a meta → resgata 50").
+          </p>
+
+          <div class="bloco">
+            <h2>Nova campanha</h2>
+            <form id="form-campanha">
+              <div class="field">
+                <label for="camp-nome">Nome da campanha</label>
+                <input id="camp-nome" placeholder="Ex: Bateu a meta de junho" required />
+              </div>
+
+              <div class="field">
+                <label>Tipo de resgate</label>
+                <div class="type-tabs" id="camp-tabs">
+                  <button type="button" class="type-tab on" data-tipo="codigo"><i class="ph-fill ph-tag"></i> Código</button>
+                  <button type="button" class="type-tab" data-tipo="link"><i class="ph-fill ph-link"></i> Link</button>
+                </div>
+              </div>
+
+              <div class="field" id="camp-valor-field">
+                <label id="camp-valor-label">Código exclusivo</label>
+                <div class="input-com-btn">
+                  <input id="camp-codigo" placeholder="Ex: META50" style="text-transform: uppercase;" />
+                  <button type="button" class="btn-sec-mini" id="camp-gerar"><i class="ph-fill ph-dice-five"></i> Gerar</button>
+                </div>
+                <span class="hint" id="camp-link-preview" hidden>Link: /c/?codigo=</span>
+              </div>
+
+              <div class="form-linha">
+                <div class="field">
+                  <label for="camp-pontos">Pontos (CRC)</label>
+                  <input id="camp-pontos" type="number" min="1" placeholder="0" required />
+                </div>
+                <div class="field">
+                  <label for="camp-limite">Limite de usos</label>
+                  <input id="camp-limite" type="number" min="1" placeholder="Ilimitado" />
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="camp-validade">Validade</label>
+                <input id="camp-validade" type="date" />
+              </div>
+
+              <label class="form-check toggle">
+                <input id="camp-ativo" type="checkbox" checked />
+                <span>Campanha ativa</span>
+              </label>
+
+              <button type="submit" style="align-self: flex-end;">Criar campanha</button>
+              <p id="camp-aviso" class="aviso"></p>
+            </form>
+          </div>
+
+          <div class="bloco">
+            <h2>Campanhas criadas</h2>
+            <ul id="campanhas-lista" class="lista-usuarios"></ul>
+          </div>
+        </section>
+
+        <!-- PEDIDOS -->
+        <section class="sec" data-sec="pedidos" hidden>
+          <div class="dashboard-header" style="margin-bottom: 24px;">
+            <h1>Gestão de Pedidos</h1>
+            <p style="color: var(--muted); font-size: 14px;">Gerencie o fluxo de entrega e status de resgates da loja.</p>
+          </div>
+
+          <div class="stat-grid">
+            <div class="stat-card">
+              <div class="stat-ico" style="background: #fde3cf; color: var(--orange);"><i class="ph-fill ph-package"></i></div>
+              <div>
+                <div class="stat-num" id="pedidos-total-count">0</div>
+                <div class="stat-label">Pedidos</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-ico" style="background: #fff4dc; color: #b9820a;"><i class="ph-fill ph-hourglass"></i></div>
+              <div>
+                <div class="stat-num" id="pedidos-pendentes-count">0</div>
+                <div class="stat-label">Pendentes</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-ico" style="background: #e8f0ff; color: #3b82f6;"><i class="ph-fill ph-check-circle"></i></div>
+              <div>
+                <div class="stat-num" id="pedidos-entregues-count">0</div>
+                <div class="stat-label">Entregues</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-ico" style="background: #e8f5e9; color: var(--pos);"><i class="ph-fill ph-coins"></i></div>
+              <div>
+                <div class="stat-num" id="pedidos-faturado-total">0</div>
+                <div class="stat-label">CRcoins resgatados</div>
+              </div>
+            </div>
+          </div>
+
+          <input id="pedido-busca" class="busca-inline busca-full" placeholder="Buscar por comprador ou nº do pedido..." />
+
+          <!-- Filtros de Pedidos -->
+          <div class="pedidos-filtros" style="display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 4px;">
+            <button class="btn-filtro-pedido ativo" data-filtro="todos" style="padding: 8px 16px; font-size: 13px; font-weight: 600;">Todos</button>
+            <button class="btn-filtro-pedido" data-filtro="pendente" style="padding: 8px 16px; font-size: 13px; font-weight: 600;">Pendentes</button>
+            <button class="btn-filtro-pedido" data-filtro="confirmado" style="padding: 8px 16px; font-size: 13px; font-weight: 600;">Confirmados</button>
+            <button class="btn-filtro-pedido" data-filtro="entregue" style="padding: 8px 16px; font-size: 13px; font-weight: 600;">Entregues</button>
+            <button class="btn-filtro-pedido" data-filtro="cancelado" style="padding: 8px 16px; font-size: 13px; font-weight: 600;">Cancelados</button>
+          </div>
+
+          <div class="bloco" style="padding: 20px;">
+            <p id="pedidos-aviso" class="aviso"></p>
+            <ul id="pedidos-lista" class="pedidos-grade-lista" style="list-style: none; display: grid; grid-template-columns: 1fr; gap: 16px; padding: 0;"></ul>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- Modal de edição de produto -->
+    <div id="modal-produto" class="modal-bg" hidden>
+      <div class="modal" style="max-width: 460px;">
+        <div class="modal-head">
+          <h3>Editar produto</h3>
+          <button class="modal-close" id="medit-fechar" type="button">✕</button>
+        </div>
+        <div class="modal-body">
+          <form id="form-editar-produto">
+            <input type="hidden" id="medit-id" />
+            <div class="field">
+              <label for="medit-nome">Nome</label>
+              <input id="medit-nome" placeholder="nome do produto" required />
+            </div>
+            <div class="field">
+              <label for="medit-descricao">Descrição</label>
+              <input id="medit-descricao" placeholder="descrição (opcional)" />
+            </div>
+            <div class="form-linha">
+              <div class="field">
+                <label for="medit-preco">Preço (CRcoins)</label>
+                <input id="medit-preco" type="number" min="0" required />
+              </div>
+              <div class="field">
+                <label for="medit-estoque">Estoque</label>
+                <input id="medit-estoque" type="number" min="0" required />
+              </div>
+            </div>
+            <div class="field">
+              <label for="medit-categoria">Categoria</label>
+              <input id="medit-categoria" placeholder="ex: Vestuário, Acessórios" />
+            </div>
+            <label class="form-arquivo">
+              <span>Trocar imagem (opcional)</span>
+              <div class="file-upload-wrapper">
+                <svg viewBox="0 0 24 24" fill="none" width="20" height="20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--orange); flex-shrink: 0;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                <span class="file-upload-text" id="medit-file-name">Manter imagem atual...</span>
+                <input id="medit-imagem" type="file" accept="image/*" style="display: none;" />
+              </div>
+            </label>
+            <button type="button" class="link" id="medit-remover-img" style="align-self: flex-start; color: var(--neg);">Remover imagem atual</button>
+            <label class="form-check toggle">
+              <input id="medit-ativo" type="checkbox" />
+              <span>Produto ativo <small>aparece na loja para resgate</small></span>
+            </label>
+            <button type="submit" id="medit-salvar">Salvar alterações</button>
+            <p id="medit-aviso" class="aviso"></p>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="./admin.js"></script>
+  </body>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Carrinho · CR Store</title>
+    <link rel="icon" type="image/webp" href="/assets/images/crcoins.webp" />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <header id="topo"></header>
+
+    <main class="conteudo cart-page-container">
+      <div class="cart-title-row">
+        <a href="loja.html" class="link-voltar">← Continuar comprando</a>
+        <h1>Meu Carrinho</h1>
+      </div>
+
+      <div class="cart-layout">
+        <!-- Left: Cart items list -->
+        <div class="cart-main">
+          <p id="cart-aviso" class="aviso"></p>
+          <ul id="cart-itens" class="lista-carrinho">
+            <!-- Dynamically populated -->
+          </ul>
+        </div>
+
+        <!-- Right: Order summary card -->
+        <aside class="cart-summary-card">
+          <h2>Resumo do pedido</h2>
+          
+          <div class="summary-line">
+            <span>Subtotal de itens</span>
+            <span id="subtotal-qtd">0 itens</span>
+          </div>
+
+          <div class="summary-line highlight">
+            <span>Total a pagar</span>
+            <strong id="total-pagar">0 pts</strong>
+          </div>
+
+          <div class="wallet-balance-box">
+            <div class="balance-info">
+              <span>Seu saldo atual:</span>
+              <strong id="saldo-atual">0 pts</strong>
+            </div>
+            <div id="saldo-insuficiente-aviso" class="aviso-saldo-insuficiente" hidden>
+              ⚠️ Saldo insuficiente para concluir esta compra.
+            </div>
+          </div>
+
+          <button id="btn-checkout" class="btn-checkout" disabled>Finalizar Compra</button>
+        </aside>
+      </div>
+    </main>
+
+    <!-- Overlay de Finalização -->
+    <div id="checkout-loading-overlay" class="checkout-overlay" hidden>
+      <div class="checkout-overlay-content">
+        <div class="coin-loader">
+          <img src="/assets/images/crcoins.webp" class="coin-spin" alt="" />
+          <div class="coin-loader-shadow"></div>
+        </div>
+        <p>Finalizando seu pedido<span class="dots"></span></p>
+      </div>
+    </div>
+
+    <script type="module" src="js/carrinho.js"></script>
+  </body>
+</html>
