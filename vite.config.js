@@ -17,6 +17,29 @@ if (fs.existsSync(".env")) {
 export default defineConfig({
   plugins: [
     {
+      name: "clean-urls-dev",
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          const [path, query] = req.url.split("?");
+          if (
+            req.method === "GET" &&
+            !path.startsWith("/api/") &&
+            !path.includes(".") &&
+            path !== "/"
+          ) {
+            const candidatos = [`.${path}.html`, `.${path}/index.html`];
+            for (const c of candidatos) {
+              if (fs.existsSync(resolve(import.meta.dirname, c))) {
+                req.url = c.slice(1) + (query ? `?${query}` : "");
+                break;
+              }
+            }
+          }
+          next();
+        });
+      },
+    },
+    {
       name: "api-serverless-middleware",
       configureServer(server) {
         server.middlewares.use(async (req, res, next) => {

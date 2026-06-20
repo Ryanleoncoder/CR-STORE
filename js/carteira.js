@@ -404,6 +404,6 @@ resgatarForm.addEventListener("submit", async (e) => {
   setTimeout(() => (modalResgatar.hidden = true), 1600);
 });
 
-// Link compartilhável: carteira.html?codigo=XXXX
+// Link compartilhável: /carteira?codigo=XXXX
 const codigoUrl = new URLSearchParams(location.search).get("codigo");
 if (codigoUrl) abrirResgatar(codigoUrl.toUpperCase());

@@ -186,7 +186,7 @@ function atualizarBadge() {
 window.addEventListener("cart-updated", atualizarBadge);
 
 async function compartilhar(id, btn) {
-  const url = `${window.location.origin}/produto.html?id=${id}`;
+  const url = `${window.location.origin}/produto?id=${id}`;
   try {
     await navigator.clipboard.writeText(url);
     const txt = btn.textContent;

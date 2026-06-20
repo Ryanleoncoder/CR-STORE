@@ -845,7 +845,7 @@ if (campForm) {
 
   function atualizarPreview() {
     campPreview.textContent =
-      `${window.location.origin}/carteira.html?codigo=` + (campCodigo.value || "");
+      `${window.location.origin}/carteira?codigo=` + (campCodigo.value || "");
   }
 
   function renderCampanhas(lista) {
@@ -859,7 +859,7 @@ if (campForm) {
         const ref =
           c.tipo === "codigo"
             ? '<i class="ph-fill ph-tag"></i> ' + c.codigo
-            : '<i class="ph-fill ph-link"></i> …/carteira.html?codigo=' + c.codigo;
+            : '<i class="ph-fill ph-link"></i> …/carteira?codigo=' + c.codigo;
         return `
         <li class="usuario ${c.ativo ? "" : "inativo"}">
           <div class="usuario-info">

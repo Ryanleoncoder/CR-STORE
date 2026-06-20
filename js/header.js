@@ -15,12 +15,12 @@ export async function montarHeader(ativo) {
   const temAcessoAdmin = cargos && cargos.length > 0;
 
   header.innerHTML = `
-    <a href="loja.html" class="logo logo-topo">CR <b>Store</b></a>
+    <a href="/loja" class="logo logo-topo">CR <b>Store</b></a>
     <nav>
-      <a href="loja.html"${ativo === "loja" ? ' class="ativo"' : ""}>Loja</a>
-      <a href="carteira.html"${ativo === "carteira" ? ' class="ativo"' : ""}>Carteira</a>
-      <a href="meus-pedidos.html"${ativo === "pedidos" ? ' class="ativo"' : ""}>Meus pedidos</a>
-      ${temAcessoAdmin ? '<a href="admin/index.html">Admin</a>' : ""}
+      <a href="/loja"${ativo === "loja" ? ' class="ativo"' : ""}>Loja</a>
+      <a href="/carteira"${ativo === "carteira" ? ' class="ativo"' : ""}>Carteira</a>
+      <a href="/meus-pedidos"${ativo === "pedidos" ? ' class="ativo"' : ""}>Meus pedidos</a>
+      ${temAcessoAdmin ? '<a href="/admin">Admin</a>' : ""}
     </nav>
     <div class="topo-dir">
       <div class="notif-wrapper">

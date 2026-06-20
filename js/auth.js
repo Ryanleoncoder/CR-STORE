@@ -6,7 +6,7 @@ export async function requireAuth() {
   } = await supabase.auth.getSession();
 
   if (!session) {
-    window.location.href = "/index.html";
+    window.location.href = "/";
     return null;
   }
 
@@ -15,5 +15,5 @@ export async function requireAuth() {
 
 export async function logout() {
   await supabase.auth.signOut();
-  window.location.href = "/index.html";
+  window.location.href = "/";
 }

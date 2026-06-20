@@ -34,7 +34,7 @@ async function renderCarrinho() {
   const cart = getCart();
 
   if (!cart || cart.length === 0) {
-    cartItensEl.innerHTML = `<li class="vazio">Seu carrinho está vazio. <a href="loja.html" class="link">Ir para a loja</a></li>`;
+    cartItensEl.innerHTML = `<li class="vazio">Seu carrinho está vazio. <a href="/loja" class="link">Ir para a loja</a></li>`;
     subtotalQtdEl.textContent = "0 itens";
     totalPagarEl.textContent = "0 pts";
     btnCheckout.disabled = true;
@@ -148,7 +148,7 @@ btnCheckout.addEventListener("click", async () => {
     }
 
     await new Promise((resolve) => setTimeout(resolve, 1600));
-    window.location.href = "loja.html";
+    window.location.href = "/loja";
   } catch (err) {
     if (overlay) overlay.hidden = true;
     cartAviso.textContent = err.message || "Erro ao finalizar pedido.";

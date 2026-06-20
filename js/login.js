@@ -19,13 +19,13 @@ const passoSenha = document.querySelector("#passo-senha");
 let emailPrimeiro = "";
 
 supabase.auth.getSession().then(({ data: { session } }) => {
-  if (session) window.location.href = "loja.html";
+  if (session) window.location.href = "/loja";
 });
 
 // Retorno do link mágico
 supabase.auth.onAuthStateChange((event, session) => {
   if (event === "SIGNED_IN" && session) {
-    window.location.href = "loja.html";
+    window.location.href = "/loja";
   }
 });
 
@@ -81,7 +81,7 @@ formEntrar.addEventListener("submit", async (e) => {
   });
 
   if (error) return mostrarErro("E-mail ou senha inválidos.");
-  window.location.href = "loja.html";
+  window.location.href = "/loja";
 });
 
 document.querySelector("#toggle-magico").addEventListener("click", () => {
@@ -125,7 +125,7 @@ document.querySelector("#mg-validar").addEventListener("click", async () => {
   });
   if (error) return mostrarErro("Código inválido ou expirado.");
 
-  window.location.href = "loja.html";
+  window.location.href = "/loja";
 });
 
 const formPrimeiroAcesso = document.querySelector("#form-primeiro-acesso");
@@ -156,6 +156,6 @@ if (formPrimeiroAcesso) {
     });
 
     if (loginError) return mostrarErro("Cadastro concluído! Por favor, faça login na aba Entrar.");
-    window.location.href = "loja.html";
+    window.location.href = "/loja";
   });
 }

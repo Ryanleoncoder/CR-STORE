@@ -51,7 +51,7 @@ async function carregar() {
 
   if (!data || data.length === 0) {
     lista.innerHTML =
-      "<li class='vazio'>Você ainda não fez nenhum resgate. <a href='loja.html' class='link'>Ir para a loja</a></li>";
+      "<li class='vazio'>Você ainda não fez nenhum resgate. <a href='/loja' class='link'>Ir para a loja</a></li>";
     return;
   }
 
