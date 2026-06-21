@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1.0" />
 <title>404 · CR Store</title>
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css" />
 <style>
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
@@ -17,10 +18,10 @@
   .left{background:linear-gradient(135deg,#fff3ea 0%,var(--cream) 50%,#ffe9d6 100%);display:flex;align-items:center;justify-content:center;padding:60px;position:relative;overflow:hidden}
   .four-wrap{display:flex;align-items:center;justify-content:center;user-select:none}
   .num{font-size:clamp(100px,13vw,170px);font-weight:800;line-height:1;color:var(--orange);letter-spacing:-4px;text-shadow:0 6px 30px rgba(236,100,38,.25)}
-  .zero-emoji{font-size:clamp(70px,9vw,120px);animation:spin-slow 8s linear infinite;display:block;line-height:1}
-  @keyframes spin-slow{0%{transform:rotate(0) scale(1)}50%{transform:rotate(180deg) scale(1.08)}100%{transform:rotate(360deg) scale(1)}}
+  .glass{font-size:clamp(80px,10vw,132px);color:var(--orange);line-height:1;margin:0 4px;display:inline-block;filter:drop-shadow(0 6px 22px rgba(236,100,38,.25));animation:scan 4s ease-in-out infinite}
+  @keyframes scan{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(7deg)}}
   .shelf{position:absolute;bottom:50px;left:50%;transform:translateX(-50%);display:flex;gap:14px}
-  .lost-tile{width:62px;height:62px;border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 6px 16px rgba(99,39,19,.12);animation:float 3s ease-in-out infinite}
+  .lost-tile{width:64px;height:64px;border-radius:50%;background:#fff center/cover no-repeat;box-shadow:0 6px 16px rgba(99,39,19,.14);animation:float 3s ease-in-out infinite}
   .lost-tile:nth-child(2){animation-delay:.4s}
   .lost-tile:nth-child(3){animation-delay:.8s}
   .lost-tile:nth-child(4){animation-delay:1.2s}
@@ -28,9 +29,6 @@
   @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
   .right{display:flex;align-items:center;justify-content:center;padding:60px}
   .copy{width:100%;max-width:400px}
-  .badge{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:9999px;background:var(--soft);border:1px solid var(--border);font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:24px}
-  .badge .dot{width:7px;height:7px;border-radius:50%;background:var(--orange);animation:pulse 1.6s ease-in-out infinite}
-  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
   .copy h1{font-size:clamp(26px,3vw,34px);font-weight:700;color:var(--brown);line-height:1.3;margin-bottom:14px}
   .copy h1 span{color:var(--orange)}
   .copy p{font-size:15px;color:var(--muted);line-height:1.7;margin-bottom:32px}
@@ -53,26 +51,25 @@
       <div>
         <div class="four-wrap">
           <span class="num">4</span>
-          <span class="zero-emoji">🎁</span>
+          <i class="ph-fill ph-magnifying-glass glass"></i>
           <span class="num">4</span>
         </div>
         <div class="shelf">
-          <div class="lost-tile">☕</div>
-          <div class="lost-tile">👕</div>
-          <div class="lost-tile">🧢</div>
-          <div class="lost-tile">🍫</div>
-          <div class="lost-tile">✨</div>
+          <div class="lost-tile" style="background-image:url(/assets/images/stickers/1.png)"></div>
+          <div class="lost-tile" style="background-image:url(/assets/images/stickers/4.png)"></div>
+          <div class="lost-tile" style="background-image:url(/assets/images/stickers/9.png)"></div>
+          <div class="lost-tile" style="background-image:url(/assets/images/stickers/2.png)"></div>
+          <div class="lost-tile" style="background-image:url(/assets/images/stickers/6.png)"></div>
         </div>
       </div>
     </div>
     <div class="right">
       <div class="copy">
-        <div class="badge"><span class="dot"></span> Erro 404</div>
-        <h1>Ops! Essa página<br/>se perdeu no <span>estoque</span> 😅</h1>
+        <h1>Ops! Essa página<br/>se perdeu no <span>estoque</span></h1>
         <p>O link está errado ou o produto saiu de cena. Mas tem bastante coisa esperando por você na loja!</p>
         <div class="ctas">
-          <a class="btn btn-pri" href="/loja">🛒 Ir para a loja</a>
-          <a class="btn btn-sec" href="/carteira">Ver minha carteira</a>
+          <a class="btn btn-pri" href="/loja"><i class="ph-fill ph-storefront"></i> Ir para a loja</a>
+          <a class="btn btn-sec" href="/carteira"><i class="ph-fill ph-wallet"></i> Ver minha carteira</a>
         </div>
       </div>
     </div>

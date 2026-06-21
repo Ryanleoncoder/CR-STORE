@@ -1,16 +1,13 @@
 import { createClient } from "@supabase/supabase-js";
-
+import { getAccessToken } from "./auth-token.js";
 
 const chave =
   import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
   import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+
 export const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, chave, {
-  auth: {
-    storage: window.sessionStorage,
-    persistSession: true,
-    autoRefreshToken: true,
-  },
+  accessToken: async () => (await getAccessToken()) || "",
 });
 
 export const COIN_SVG = `<img src="/assets/images/crcoins.webp" class="coin-token" alt="CRC" />`;

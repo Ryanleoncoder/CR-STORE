@@ -1,4 +1,4 @@
-import { supabase } from "./supabase.js";
+import { setAccessToken, getAccessToken } from "./auth-token.js";
 
 const abaEntrar = document.querySelector("#aba-entrar");
 const abaPrimeiro = document.querySelector("#aba-primeiro");
@@ -12,45 +12,81 @@ const mgEmail = document.querySelector("#mg-email");
 const mgCodigo = document.querySelector("#mg-codigo");
 let emailMagico = "";
 
-const passoEmail = document.querySelector("#passo-email");
-const passoCodigo = document.querySelector("#passo-codigo");
-const passoSenha = document.querySelector("#passo-senha");
+const JSON_HEADERS = { "Content-Type": "application/json" };
 
-let emailPrimeiro = "";
 
-supabase.auth.getSession().then(({ data: { session } }) => {
-  if (session) window.location.href = "/loja";
-});
+function destinoPosLogin() {
+  const r = new URLSearchParams(location.search).get("redirect");
+  return r && r.startsWith("/") && !r.startsWith("//") ? r : "/loja";
+}
 
-// Retorno do link mágico
-supabase.auth.onAuthStateChange((event, session) => {
-  if (event === "SIGNED_IN" && session) {
-    window.location.href = "/loja";
+function concluirLogin(dados) {
+  setAccessToken(dados.access_token, dados.expires_at);
+  window.location.href = destinoPosLogin();
+}
+
+function revelar() {
+  document.body.classList.add("pronto");
+}
+
+
+setTimeout(revelar, 3000);
+
+
+(async () => {
+  if (tratarErroDeLink()) return revelar();
+
+  const retorno = await tratarRetornoDoLink();
+  if (retorno === "ok") return;
+  if (retorno === "erro") return revelar();
+
+  const token = await getAccessToken();
+  if (token) {
+    window.location.href = destinoPosLogin();
+    return;
   }
-});
-
-
-tratarErroDeLink();
+  revelar();
+})();
 
 abaEntrar.addEventListener("click", () => trocarAba(true));
 abaPrimeiro.addEventListener("click", () => trocarAba(false));
 
+
 function tratarErroDeLink() {
   const params = new URLSearchParams(window.location.hash.slice(1));
   const erro = params.get("error_code") || params.get("error");
-  if (!erro) return;
+  if (!erro) return false;
 
   const mensagens = {
     otp_expired: "Esse link expirou ou já foi usado. Peça um novo abaixo.",
     access_denied: "Não foi possível validar o link. Peça um novo abaixo.",
   };
 
- 
   history.replaceState(null, "", window.location.pathname);
-
-  
   document.querySelector("#toggle-magico").click();
   mostrarErro(mensagens[erro] || "Não foi possível entrar. Tente novamente.");
+  return true;
+}
+
+
+async function tratarRetornoDoLink() {
+  const params = new URLSearchParams(window.location.hash.slice(1));
+  const refresh = params.get("refresh_token");
+  if (!refresh) return false;
+
+  history.replaceState(null, "", window.location.pathname + window.location.search);
+
+  const res = await fetch("/api/auth/session", {
+    method: "POST",
+    headers: JSON_HEADERS,
+    body: JSON.stringify({ refresh_token: refresh }),
+  });
+  if (!res.ok) {
+    mostrarErro("Não foi possível concluir o login. Peça um novo link.");
+    return "erro";
+  }
+  concluirLogin(await res.json());
+  return "ok";
 }
 
 function trocarAba(entrar) {
@@ -75,13 +111,17 @@ formEntrar.addEventListener("submit", async (e) => {
   e.preventDefault();
   limparAviso();
 
-  const { error } = await supabase.auth.signInWithPassword({
-    email: document.querySelector("#email-entrar").value.trim(),
-    password: document.querySelector("#senha-entrar").value,
+  const res = await fetch("/api/auth/login", {
+    method: "POST",
+    headers: JSON_HEADERS,
+    body: JSON.stringify({
+      email: document.querySelector("#email-entrar").value.trim(),
+      password: document.querySelector("#senha-entrar").value,
+    }),
   });
-
-  if (error) return mostrarErro("E-mail ou senha inválidos.");
-  window.location.href = "/loja";
+  const dados = await res.json();
+  if (!res.ok) return mostrarErro(dados.error || "E-mail ou senha inválidos.");
+  concluirLogin(dados);
 });
 
 document.querySelector("#toggle-magico").addEventListener("click", () => {
@@ -99,14 +139,15 @@ document.querySelector("#mg-enviar").addEventListener("click", async () => {
   emailMagico = document.querySelector("#email-magico").value.trim();
   if (!emailMagico) return mostrarErro("Informe o e-mail.");
 
-  const { error } = await supabase.auth.signInWithOtp({
-    email: emailMagico,
-    options: {
-      shouldCreateUser: false,
-      emailRedirectTo: `${window.location.origin}/`,
-    },
+  const res = await fetch("/api/auth/magic-link", {
+    method: "POST",
+    headers: JSON_HEADERS,
+    body: JSON.stringify({
+      email: emailMagico,
+      redirectTo: `${window.location.origin}/`,
+    }),
   });
-  if (error) return mostrarErro("Não foi possível enviar o e-mail.");
+  if (!res.ok) return mostrarErro("Não foi possível enviar o e-mail.");
 
   mgEmail.hidden = true;
   mgCodigo.hidden = false;
@@ -118,14 +159,14 @@ document.querySelector("#mg-validar").addEventListener("click", async () => {
   const codigo = document.querySelector("#mg-cod").value.trim();
   if (!codigo) return mostrarErro("Informe o código.");
 
-  const { error } = await supabase.auth.verifyOtp({
-    email: emailMagico,
-    token: codigo,
-    type: "email",
+  const res = await fetch("/api/auth/verify-otp", {
+    method: "POST",
+    headers: JSON_HEADERS,
+    body: JSON.stringify({ email: emailMagico, token: codigo }),
   });
-  if (error) return mostrarErro("Código inválido ou expirado.");
-
-  window.location.href = "/loja";
+  const dados = await res.json();
+  if (!res.ok) return mostrarErro(dados.error || "Código inválido ou expirado.");
+  concluirLogin(dados);
 });
 
 const formPrimeiroAcesso = document.querySelector("#form-primeiro-acesso");
@@ -143,19 +184,20 @@ if (formPrimeiroAcesso) {
 
     const res = await fetch("/api/primeiro-acesso", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: JSON_HEADERS,
       body: JSON.stringify({ email, password: senha }),
     });
-
     const dados = await res.json();
     if (!res.ok) return mostrarErro(dados.error || "Erro no cadastro.");
 
-    const { error: loginError } = await supabase.auth.signInWithPassword({
-      email: email,
-      password: senha,
+    const resLogin = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ email, password: senha }),
     });
-
-    if (loginError) return mostrarErro("Cadastro concluído! Por favor, faça login na aba Entrar.");
-    window.location.href = "/loja";
+    if (!resLogin.ok) {
+      return mostrarErro("Cadastro concluído! Por favor, faça login na aba Entrar.");
+    }
+    concluirLogin(await resLogin.json());
   });
 }

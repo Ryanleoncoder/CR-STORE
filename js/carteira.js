@@ -1,6 +1,7 @@
 import { supabase } from "./supabase.js";
 import { requireAuth } from "./auth.js";
 import { montarHeader } from "./header.js";
+import { tocarMoeda } from "./som.js";
 
 const saldoEl = document.querySelector("#saldo");
 const extratoEl = document.querySelector("#extrato");
@@ -229,6 +230,7 @@ transfForm.addEventListener("submit", async (e) => {
     return;
   }
 
+  tocarMoeda();
   modalTransf.hidden = true;
   resetTransfer();
   carregarSaldo();

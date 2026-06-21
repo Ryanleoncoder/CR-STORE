@@ -6,6 +6,11 @@
     <title>CR Store</title>
     <link rel="icon" type="image/webp" href="/assets/images/crcoins.webp" />
     <link rel="stylesheet" href="css/style.css" />
+    <style>
+      /* Esconde a tela até a checagem de sessão decidir (evita flash de login) */
+      body.welcome-body { visibility: hidden; }
+      body.welcome-body.pronto { visibility: visible; }
+    </style>
   </head>
   <body class="welcome-body">
     <div class="w-topbar">

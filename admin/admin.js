@@ -1,5 +1,6 @@
 import { supabase } from "../js/supabase.js";
 import { requireAuth, logout } from "../js/auth.js";
+import { getAccessToken } from "../js/auth-token.js";
 import { urlImagem, uploadImagem } from "../js/storage.js";
 
 const restrito = document.querySelector("#restrito");
@@ -26,12 +27,10 @@ const session = await requireAuth();
 if (session) iniciar();
 
 async function authHeaders() {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  const token = await getAccessToken();
   return {
     "Content-Type": "application/json",
-    Authorization: `Bearer ${session?.access_token ?? ""}`,
+    Authorization: `Bearer ${token ?? ""}`,
   };
 }
 

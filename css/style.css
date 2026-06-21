@@ -2665,6 +2665,20 @@ i[class*="ph-"] {
   color: var(--ink);
 }
 
+@media (max-width: 768px) {
+  .flaticon-credit,
+  .dev-credit {
+    position: static;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    justify-content: center;
+    margin: 6px auto;
+  }
+  .flaticon-credit { margin-top: 18px; }
+  .dev-credit { margin-bottom: 18px; }
+}
+
 /* Moeda ao lado do logo */
 .logo-coin {
   width: 1.6em;

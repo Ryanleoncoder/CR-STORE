@@ -1,19 +1,29 @@
-import { supabase } from "./supabase.js";
+import { getAccessToken, clearAccessToken } from "./auth-token.js";
 
-export async function requireAuth() {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session) {
-    window.location.href = "/";
+function lerUserId(token) {
+  try {
+    let b = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    while (b.length % 4) b += "=";
+    return JSON.parse(atob(b)).sub || null;
+  } catch {
     return null;
   }
+}
 
-  return session;
+export async function requireAuth() {
+  const token = await getAccessToken();
+  if (!token) {
+    const destino = window.location.pathname + window.location.search;
+    window.location.href = "/?redirect=" + encodeURIComponent(destino);
+    return null;
+  }
+  return { access_token: token, user: { id: lerUserId(token) } };
 }
 
 export async function logout() {
-  await supabase.auth.signOut();
+  try {
+    await fetch("/api/auth/logout", { method: "POST" });
+  } catch {}
+  clearAccessToken();
   window.location.href = "/";
 }

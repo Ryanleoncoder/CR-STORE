@@ -2,6 +2,7 @@ import { supabase, getCart, updateCartQty, removeFromCart, clearCart, cartTotal,
 import { requireAuth } from "./auth.js";
 import { montarHeader } from "./header.js";
 import { urlImagem } from "./storage.js";
+import { tocarMoeda } from "./som.js";
 
 const cartItensEl = document.querySelector("#cart-itens");
 const cartAviso = document.querySelector("#cart-aviso");
@@ -138,6 +139,7 @@ btnCheckout.addEventListener("click", async () => {
     if (error) throw error;
 
     clearCart();
+    tocarMoeda();
     if (overlay) {
       overlay.querySelector(".checkout-overlay-content").innerHTML = `
         <svg viewBox="0 0 52 52" class="compra-ok-svg">
