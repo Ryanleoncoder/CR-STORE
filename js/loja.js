@@ -17,20 +17,33 @@ if (session) {
   montarHeader("loja");
   carregar();
   atualizarBadge();
+
+  supabase
+    .channel("produtos-rt")
+    .on(
+      "postgres_changes",
+      { event: "UPDATE", schema: "public", table: "produtos" },
+      (payload) => {
+        const id = payload.new?.id;
+        if (!id || typeof payload.new.favoritos_total !== "number") return;
+        contMap[id] = payload.new.favoritos_total;
+        const span = grade.querySelector(`[data-fav="${id}"] span`);
+        if (span) span.textContent = contMap[id];
+      }
+    )
+    .subscribe();
 }
 
 async function carregar() {
   mostrarSkeletonsLoja();
-  const [{ data: produtos }, { data: meusFav }, { data: contagens }] =
-    await Promise.all([
-      supabase
-        .from("produtos")
-        .select("id, nome, descricao, preco, estoque, imagem_url, categoria")
-        .eq("ativo", true)
-        .order("nome"),
-      supabase.from("favoritos").select("produto_id"),
-      supabase.from("produtos_favoritos").select("produto_id, total"),
-    ]);
+  const [{ data: produtos }, { data: meusFav }] = await Promise.all([
+    supabase
+      .from("produtos")
+      .select("id, nome, descricao, preco, estoque, imagem_url, categoria, favoritos_total")
+      .eq("ativo", true)
+      .order("nome"),
+    supabase.from("favoritos").select("produto_id"),
+  ]);
 
   if (!produtos || produtos.length === 0) {
     stripCat.innerHTML = "";
@@ -40,7 +53,7 @@ async function carregar() {
 
   todosProdutos = produtos;
   favSet = new Set((meusFav ?? []).map((f) => f.produto_id));
-  contMap = Object.fromEntries((contagens ?? []).map((c) => [c.produto_id, c.total]));
+  contMap = Object.fromEntries(produtos.map((p) => [p.id, p.favoritos_total ?? 0]));
   const imgs = await Promise.all(produtos.map((p) => urlImagem(p.imagem_url)));
   imgMap = {};
   produtos.forEach((p, i) => (imgMap[p.id] = imgs[i]));
