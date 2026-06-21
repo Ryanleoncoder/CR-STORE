@@ -171,6 +171,52 @@ document.querySelector("#mg-validar").addEventListener("click", async () => {
 
 const formPrimeiroAcesso = document.querySelector("#form-primeiro-acesso");
 if (formPrimeiroAcesso) {
+  const paPasso1 = document.querySelector("#pa-passo1");
+  const paPasso2 = document.querySelector("#pa-passo2");
+  const campoNome = document.querySelector("#campo-nome");
+  const campoUsername = document.querySelector("#campo-username");
+  const inputNome = document.querySelector("#nome-primeiro");
+  const inputUsername = document.querySelector("#username-primeiro");
+  let etapa = 1;
+
+  function abrirPasso2(precisaNome, precisaUsername) {
+    campoNome.hidden = !precisaNome;
+    inputNome.required = precisaNome;
+    campoUsername.hidden = !precisaUsername;
+    inputUsername.required = precisaUsername;
+    paPasso1.hidden = true;
+    paPasso2.hidden = false;
+    etapa = 2;
+  }
+
+  async function criarConta(email, senha) {
+    const res = await fetch("/api/primeiro-acesso", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        email,
+        password: senha,
+        nome: inputNome.value.trim(),
+        username: inputUsername.value.trim(),
+      }),
+    });
+    const dados = await res.json();
+    if (!res.ok) {
+      if (dados.precisaNome || dados.precisaUsername) abrirPasso2(dados.precisaNome, dados.precisaUsername);
+      return mostrarErro(dados.error || "Erro no cadastro.");
+    }
+
+    const resLogin = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ email, password: senha }),
+    });
+    if (!resLogin.ok) {
+      return mostrarErro("Cadastro concluído! Por favor, faça login na aba Entrar.");
+    }
+    concluirLogin(await resLogin.json());
+  }
+
   formPrimeiroAcesso.addEventListener("submit", async (e) => {
     e.preventDefault();
     limparAviso();
@@ -182,22 +228,15 @@ if (formPrimeiroAcesso) {
     if (senha.length < 6) return mostrarErro("A senha precisa de ao menos 6 caracteres.");
     if (senha !== senha2) return mostrarErro("As senhas não conferem.");
 
-    const res = await fetch("/api/primeiro-acesso", {
-      method: "POST",
-      headers: JSON_HEADERS,
-      body: JSON.stringify({ email, password: senha }),
-    });
-    const dados = await res.json();
-    if (!res.ok) return mostrarErro(dados.error || "Erro no cadastro.");
-
-    const resLogin = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: JSON_HEADERS,
-      body: JSON.stringify({ email, password: senha }),
-    });
-    if (!resLogin.ok) {
-      return mostrarErro("Cadastro concluído! Por favor, faça login na aba Entrar.");
+    if (etapa === 1) {
+      
+      try {
+        const res = await fetch(`/api/primeiro-acesso?email=${encodeURIComponent(email)}`);
+        const { precisaNome, precisaUsername } = await res.json();
+        if (precisaNome || precisaUsername) return abrirPasso2(precisaNome, precisaUsername);
+      } catch {}
     }
-    concluirLogin(await resLogin.json());
+
+    await criarConta(email, senha);
   });
 }

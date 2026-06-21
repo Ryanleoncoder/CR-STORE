@@ -859,6 +859,8 @@ if (campForm) {
           c.tipo === "codigo"
             ? '<i class="ph-fill ph-tag"></i> ' + c.codigo
             : '<i class="ph-fill ph-link"></i> …/carteira?codigo=' + c.codigo;
+        const valorCopiar =
+          c.tipo === "codigo" ? c.codigo : `${window.location.origin}/carteira?codigo=${c.codigo}`;
         return `
         <li class="usuario ${c.ativo ? "" : "inativo"}">
           <div class="usuario-info">
@@ -871,11 +873,43 @@ if (campForm) {
             <span class="badge-${c.ativo ? "entregue" : "cancelado"}" style="font-size: 11px; padding: 4px 8px; border-radius: 4px; font-weight: 700;">${
           c.ativo ? "ATIVA" : "INATIVA"
         }</span>
+            <button class="link" type="button" data-acao="copiar" data-valor="${valorCopiar}" title="Copiar"><i class="ph-fill ph-copy"></i></button>
+            <button class="link" type="button" data-acao="toggle" data-id="${c.id}" data-ativo="${c.ativo}" title="${c.ativo ? "Desativar" : "Reativar"}"><i class="ph-fill ph-${c.ativo ? "pause" : "play"}"></i></button>
+            <button class="link" type="button" data-acao="excluir" data-id="${c.id}" title="Excluir"><i class="ph-fill ph-trash"></i></button>
           </div>
         </li>`;
       })
       .join("");
   }
+
+  campLista.addEventListener("click", async (e) => {
+    const btn = e.target.closest("button[data-acao]");
+    if (!btn) return;
+    const acao = btn.dataset.acao;
+
+    if (acao === "copiar") {
+      try {
+        await navigator.clipboard.writeText(btn.dataset.valor);
+        const original = btn.innerHTML;
+        btn.innerHTML = '<i class="ph-fill ph-check"></i>';
+        setTimeout(() => (btn.innerHTML = original), 1200);
+      } catch {}
+      return;
+    }
+
+    if (acao === "toggle") {
+      const novo = btn.dataset.ativo !== "true";
+      await supabase.from("campanhas").update({ ativo: novo }).eq("id", btn.dataset.id);
+      carregarCampanhas();
+      return;
+    }
+
+    if (acao === "excluir") {
+      if (!confirm("Excluir esta campanha? Esta ação não pode ser desfeita.")) return;
+      await supabase.from("campanhas").delete().eq("id", btn.dataset.id);
+      carregarCampanhas();
+    }
+  });
 
   async function carregarCampanhas() {
     const { data } = await supabase

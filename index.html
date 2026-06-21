@@ -76,20 +76,36 @@
 
           <div id="form-primeiro" hidden>
             <form id="form-primeiro-acesso">
-              <p class="sub" style="margin-bottom: 12px;">Crie a senha que você usará para entrar com seu e-mail cadastrado.</p>
-              <div class="field">
-                <label for="email-primeiro">E-mail</label>
-                <input id="email-primeiro" type="email" placeholder="seu@email.com" required />
+              <div id="pa-passo1">
+                <p class="sub" style="margin-bottom: 12px;">Crie a senha que você usará para entrar com seu e-mail cadastrado.</p>
+                <div class="field">
+                  <label for="email-primeiro">E-mail</label>
+                  <input id="email-primeiro" type="email" placeholder="seu@email.com" required />
+                </div>
+                <div class="field">
+                  <label for="nova-senha">Nova senha</label>
+                  <input id="nova-senha" type="password" placeholder="Mínimo de 6 caracteres" minlength="6" required />
+                </div>
+                <div class="field">
+                  <label for="nova-senha2">Confirmar nova senha</label>
+                  <input id="nova-senha2" type="password" placeholder="Repita a nova senha" minlength="6" required />
+                </div>
+                <button type="submit" style="margin-top: 8px;">Continuar</button>
               </div>
-              <div class="field">
-                <label for="nova-senha">Nova senha</label>
-                <input id="nova-senha" type="password" placeholder="Mínimo de 6 caracteres" minlength="6" required />
+
+              <div id="pa-passo2" hidden>
+                <p class="sub" style="margin-bottom: 12px;">Quase lá! Complete seu perfil.</p>
+                <div class="field" id="campo-nome" hidden>
+                  <label for="nome-primeiro">Nome</label>
+                  <input id="nome-primeiro" type="text" placeholder="Seu nome" autocomplete="name" />
+                </div>
+                <div class="field" id="campo-username" hidden>
+                  <label for="username-primeiro">Nome de usuário</label>
+                  <input id="username-primeiro" type="text" placeholder="ex.: joao.silva" autocomplete="off" />
+                  <span class="sub" style="font-size: 12px;">Usado para te encontrar nas transferências.</span>
+                </div>
+                <button type="submit" style="margin-top: 8px;">Cadastrar e Entrar</button>
               </div>
-              <div class="field">
-                <label for="nova-senha2">Confirmar nova senha</label>
-                <input id="nova-senha2" type="password" placeholder="Repita a nova senha" minlength="6" required />
-              </div>
-              <button type="submit" style="margin-top: 8px;">Cadastrar e Entrar</button>
             </form>
           </div>
 

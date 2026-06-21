@@ -1941,6 +1941,57 @@ button:disabled {
 .notif-dropdown[hidden] {
   display: none !important;
 }
+.user-wrapper {
+  position: relative;
+  display: inline-block;
+}
+.user-chip {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 13px;
+  max-width: 160px;
+}
+.user-chip i[class*="ph-"] {
+  font-size: 20px;
+  color: var(--ink);
+}
+.user-chip #user-handle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.user-chip:hover {
+  color: var(--orange);
+}
+.user-dropdown {
+  width: 230px;
+}
+.user-card {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.user-card strong {
+  font-size: 14px;
+  color: var(--ink);
+}
+.user-card #user-copiar {
+  margin-top: 8px;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--orange);
+  font-weight: 600;
+}
 @keyframes notifFadeIn {
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }

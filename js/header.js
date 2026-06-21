@@ -39,6 +39,19 @@ export async function montarHeader(ativo) {
         </div>
       </div>
       <span class="coins" id="coins">${COIN_SVG} …</span>
+      <div class="user-wrapper">
+        <button id="user-btn" class="user-chip" title="Seu usuário">
+          <i class="ph-fill ph-user-circle"></i>
+          <span id="user-handle">@…</span>
+        </button>
+        <div id="user-dropdown" class="notif-dropdown user-dropdown" hidden>
+          <div class="user-card">
+            <strong id="user-nome">—</strong>
+            <span id="user-handle-full" class="sub"></span>
+            <button id="user-copiar" class="link"><i class="ph-fill ph-copy"></i> Copiar usuário</button>
+          </div>
+        </div>
+      </div>
       <button id="sair" class="link">Sair</button>
     </div>`;
 
@@ -46,6 +59,8 @@ export async function montarHeader(ativo) {
 
   const { data } = await supabase.from("carteiras").select("saldo").single();
   document.querySelector("#coins").innerHTML = `${COIN_SVG} ${data?.saldo ?? 0}`;
+
+  montarUsuario();
 
   const notifBtn = document.querySelector("#notif-btn");
   const notifDropdown = document.querySelector("#notif-dropdown");
@@ -130,6 +145,21 @@ export async function montarHeader(ativo) {
 
   await carregarNotificacoes();
 
+  supabase
+    .channel("carteira-rt")
+    .on(
+      "postgres_changes",
+      { event: "INSERT", schema: "public", table: "transacoes_carteira" },
+      (payload) => {
+        carregarNotificacoes();
+        const saldo = payload.new?.saldo_posterior;
+        if (typeof saldo === "number") {
+          document.querySelector("#coins").innerHTML = `${COIN_SVG} ${saldo}`;
+        }
+      }
+    )
+    .subscribe();
+
   notifBtn.addEventListener("click", (e) => {
     e.stopPropagation();
     const isHidden = notifDropdown.hidden;
@@ -154,6 +184,44 @@ export async function montarHeader(ativo) {
       localStorage.setItem(SEEN_KEY, agora);
       notifLista.innerHTML = `<li class="vazio">Nenhuma notificação recente.</li>`;
       notifBadge.hidden = true;
+    });
+  }
+
+  async function montarUsuario() {
+    const userBtn = document.querySelector("#user-btn");
+    const userDropdown = document.querySelector("#user-dropdown");
+
+    const { data: perfil } = await supabase
+      .from("usuarios")
+      .select("nome, username")
+      .maybeSingle();
+
+    const username = perfil?.username || null;
+    const nome = perfil?.nome || "Você";
+
+    document.querySelector("#user-handle").textContent = nome;
+    document.querySelector("#user-nome").textContent = nome;
+    document.querySelector("#user-handle-full").textContent = username
+      ? `@${username}`
+      : "Sem nome de usuário";
+
+    userBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      userDropdown.hidden = !userDropdown.hidden;
+    });
+    userDropdown.addEventListener("click", (e) => e.stopPropagation());
+    document.addEventListener("click", () => (userDropdown.hidden = true));
+
+    const copiar = document.querySelector("#user-copiar");
+    copiar.hidden = !username;
+    copiar.addEventListener("click", async () => {
+      if (!username) return;
+      try {
+        await navigator.clipboard.writeText(username);
+        const original = copiar.innerHTML;
+        copiar.innerHTML = '<i class="ph-fill ph-check"></i> Copiado!';
+        setTimeout(() => (copiar.innerHTML = original), 1200);
+      } catch {}
     });
   }
 }

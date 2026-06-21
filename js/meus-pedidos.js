@@ -10,6 +10,16 @@ const session = await requireAuth();
 if (session) {
   montarHeader("pedidos");
   carregar();
+
+ 
+  supabase
+    .channel("pedidos-rt")
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "pedidos" },
+      () => carregar(false)
+    )
+    .subscribe();
 }
 
 const STATUS = {
@@ -32,8 +42,8 @@ function skeleton() {
   `).join("");
 }
 
-async function carregar() {
-  skeleton();
+async function carregar(comSkeleton = true) {
+  if (comSkeleton) skeleton();
 
   const { data, error } = await supabase
     .from("pedidos")
