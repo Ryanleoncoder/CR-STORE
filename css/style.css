@@ -718,10 +718,12 @@ button:disabled {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  cursor: pointer;
 }
 .produto-img .ph {
   font-size: 60px;
   transition: transform 0.3s;
+  cursor: pointer;
 }
 .produto:hover .produto-img .ph {
   transform: scale(1.1) rotate(-5deg);

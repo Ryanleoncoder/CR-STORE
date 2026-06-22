@@ -107,7 +107,7 @@ function card(p, img, fav, total, idx) {
   return `
     <article class="produto" style="animation-delay: ${idx * 0.06}s">
       <div class="produto-img ${img ? '' : bgFor(idx)}">
-        ${img ? `<img src="${img}" alt="${p.nome}" />` : `<span class="ph">${emojiFor(idx)}</span>`}
+        ${img ? `<img src="${img}" alt="${p.nome}" data-goto="${p.id}" />` : `<span class="ph" data-goto="${p.id}">${emojiFor(idx)}</span>`}
         <button class="fav ${fav ? "on" : ""}" data-fav="${p.id}">
           <i class="ph-fill ph-heart"></i> <span>${total}</span>
         </button>
@@ -136,6 +136,11 @@ function ligarEventos() {
   );
   grade.querySelectorAll("[data-share]").forEach((b) =>
     b.addEventListener("click", () => compartilhar(b.dataset.share, b))
+  );
+  grade.querySelectorAll("[data-goto]").forEach((el) =>
+    el.addEventListener("click", () => {
+      window.location.href = `/produto?id=${el.dataset.goto}`;
+    })
   );
 }
 
