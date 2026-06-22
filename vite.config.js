@@ -102,6 +102,7 @@ export default defineConfig({
         main: resolve(import.meta.dirname, "index.html"),
         carteira: resolve(import.meta.dirname, "carteira.html"),
         loja: resolve(import.meta.dirname, "loja.html"),
+        desafios: resolve(import.meta.dirname, "desafios.html"),
         produto: resolve(import.meta.dirname, "produto.html"),
         carrinho: resolve(import.meta.dirname, "carrinho.html"),
         meuspedidos: resolve(import.meta.dirname, "meus-pedidos.html"),

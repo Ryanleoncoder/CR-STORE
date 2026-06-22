@@ -18,6 +18,7 @@ export async function montarHeader(ativo) {
     <a href="/loja" class="logo logo-topo">CR <b>Store</b></a>
     <nav>
       <a href="/loja"${ativo === "loja" ? ' class="ativo"' : ""}>Loja</a>
+      <a href="/desafios"${ativo === "desafios" ? ' class="ativo"' : ""}>Desafios</a>
       <a href="/carteira"${ativo === "carteira" ? ' class="ativo"' : ""}>Carteira</a>
       <a href="/meus-pedidos"${ativo === "pedidos" ? ' class="ativo"' : ""}>Meus pedidos</a>
       ${temAcessoAdmin ? '<a href="/admin">Admin</a>' : ""}
@@ -57,6 +58,25 @@ export async function montarHeader(ativo) {
 
   document.querySelector("#sair").addEventListener("click", logout);
 
+  if (!document.querySelector(".bottom-nav")) {
+    const on = (sec) => (ativo === sec ? " on" : "");
+    const bottomNav = document.createElement("nav");
+    bottomNav.className = "bottom-nav";
+    bottomNav.innerHTML = `
+      <a href="/loja" class="bn-item${on("loja")}"><i class="ph-fill ph-storefront"></i><span>Loja</span></a>
+      <a href="/desafios" class="bn-item${on("desafios")}"><i class="ph-fill ph-trophy"></i><span>Desafios</span></a>
+      <a href="/carteira" class="bn-item${on("carteira")}"><i class="ph-fill ph-wallet"></i><span>Carteira</span></a>
+      <a href="/meus-pedidos" class="bn-item${on("pedidos")}"><i class="ph-fill ph-receipt"></i><span>Pedidos</span></a>
+      ${
+        temAcessoAdmin
+          ? `<a href="/admin" class="bn-item"><i class="ph-fill ph-gear"></i><span>Admin</span></a>`
+          : `<button type="button" class="bn-item" id="bn-notif"><span class="bn-ico"><i class="ph-fill ph-bell"></i><span id="bn-badge" class="bn-badge" hidden></span></span><span>Notificações</span></button>`
+      }`;
+    document.body.appendChild(bottomNav);
+    document.body.classList.add("com-bottom-nav");
+    if (!temAcessoAdmin) document.body.classList.add("com-notif-bottom");
+  }
+
   const { data } = await supabase.from("carteiras").select("saldo").single();
   document.querySelector("#coins").innerHTML = `${COIN_SVG} ${data?.saldo ?? 0}`;
 
@@ -67,6 +87,13 @@ export async function montarHeader(ativo) {
   const notifBadge = document.querySelector("#notif-badge");
   const notifLista = document.querySelector("#notif-lista");
   const notifLimpar = document.querySelector("#notif-limpar");
+  const bnNotif = document.querySelector("#bn-notif");
+  const bnBadge = document.querySelector("#bn-badge");
+
+  function setNotifBadge(hidden) {
+    notifBadge.hidden = hidden;
+    if (bnBadge) bnBadge.hidden = hidden;
+  }
 
   const CLEARED_KEY = "cr_notif_cleared";
   const SEEN_KEY = "cr_notif_seen";
@@ -114,13 +141,13 @@ export async function montarHeader(ativo) {
 
     if (!transacoes || transacoes.length === 0) {
       notifLista.innerHTML = `<li class="vazio">Nenhuma notificação recente.</li>`;
-      notifBadge.hidden = true;
+      setNotifBadge(true);
       return;
     }
 
     const newest = transacoes[0].criado_em;
     const seen = localStorage.getItem(SEEN_KEY);
-    notifBadge.hidden = !!(seen && new Date(seen) >= new Date(newest));
+    setNotifBadge(!!(seen && new Date(seen) >= new Date(newest)));
 
     notifLista.innerHTML = transacoes
       .map((t) => {
@@ -160,14 +187,16 @@ export async function montarHeader(ativo) {
     )
     .subscribe();
 
-  notifBtn.addEventListener("click", (e) => {
+  function alternarNotif(e) {
     e.stopPropagation();
     const isHidden = notifDropdown.hidden;
     notifDropdown.hidden = !isHidden;
     if (!isHidden) return;
     localStorage.setItem(SEEN_KEY, new Date().toISOString());
-    notifBadge.hidden = true;
-  });
+    setNotifBadge(true);
+  }
+  notifBtn.addEventListener("click", alternarNotif);
+  if (bnNotif) bnNotif.addEventListener("click", alternarNotif);
 
   document.addEventListener("click", () => {
     if (notifDropdown) notifDropdown.hidden = true;
@@ -183,7 +212,7 @@ export async function montarHeader(ativo) {
       localStorage.setItem(CLEARED_KEY, agora);
       localStorage.setItem(SEEN_KEY, agora);
       notifLista.innerHTML = `<li class="vazio">Nenhuma notificação recente.</li>`;
-      notifBadge.hidden = true;
+      setNotifBadge(true);
     });
   }
 
