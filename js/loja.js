@@ -41,6 +41,7 @@ async function carregar() {
       .from("produtos")
       .select("id, nome, descricao, preco, estoque, imagem_url, categoria, favoritos_total")
       .eq("ativo", true)
+      .order("favoritos_total", { ascending: false })
       .order("nome"),
     supabase.from("favoritos").select("produto_id"),
   ]);
@@ -182,7 +183,7 @@ function comprar(id, btn) {
   addToCart(prod);
 
   const textoOriginal = btn.textContent;
-  btn.textContent = "Adicionado! 🛒";
+  btn.innerHTML = 'Adicionado! <i class="ph-fill ph-shopping-cart"></i>';
   btn.style.backgroundColor = "var(--pos, #4caf50)";
   btn.style.color = "white";
   

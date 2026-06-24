@@ -5,6 +5,14 @@ import { urlImagem } from "./storage.js";
 
 const lista = document.querySelector("#meus-pedidos");
 const aviso = document.querySelector("#pedidos-aviso");
+const btnVerMais = document.querySelector("#ver-mais");
+
+const PAGINA = 10;
+let limite = PAGINA;
+btnVerMais.addEventListener("click", () => {
+  limite += PAGINA;
+  carregar(false);
+});
 
 const session = await requireAuth();
 if (session) {
@@ -50,18 +58,21 @@ async function carregar(comSkeleton = true) {
     .select(
       "id, status, total, criado_em, pedido_itens(quantidade, preco_unitario, produtos(nome, imagem_url))"
     )
-    .order("criado_em", { ascending: false });
+    .order("criado_em", { ascending: false })
+    .limit(limite);
 
   if (error) {
     aviso.textContent = "Erro ao carregar seus pedidos.";
     aviso.classList.add("erro");
     lista.innerHTML = "";
+    btnVerMais.hidden = true;
     return;
   }
 
   if (!data || data.length === 0) {
     lista.innerHTML =
       "<li class='vazio'>Você ainda não fez nenhum resgate. <a href='/loja' class='link'>Ir para a loja</a></li>";
+    btnVerMais.hidden = true;
     return;
   }
 
@@ -114,4 +125,6 @@ async function carregar(comSkeleton = true) {
         </li>`;
     })
     .join("");
+
+  btnVerMais.hidden = data.length < limite;
 }

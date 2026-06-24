@@ -18,7 +18,23 @@ const transfAviso = document.querySelector("#transf-aviso");
 
 const session = await requireAuth();
 let destinatario = null;
+let destContato = null;
 let buscaTimer;
+
+const RECENTES_KEY = "cr_transf_recentes";
+function getRecentes() {
+  try {
+    return JSON.parse(localStorage.getItem(RECENTES_KEY) || "[]");
+  } catch {
+    return [];
+  }
+}
+function salvarRecente(c) {
+  if (!c?.id) return;
+  const lista = getRecentes().filter((x) => x.id !== c.id);
+  lista.unshift({ id: c.id, nome: c.nome, username: c.username || null });
+  localStorage.setItem(RECENTES_KEY, JSON.stringify(lista.slice(0, 3)));
+}
 
 if (session) {
   montarHeader("carteira");
@@ -128,7 +144,80 @@ function sinalDe(t) {
   return { cls: saida ? "saida" : "entrada", txt: saida ? "−" : "+", abs: Math.abs(t.valor) };
 }
 
+const transfHint = document.querySelector(".transf-hint");
+
+function inicialDe(u) {
+  return (u.nome || u.username || "?").trim().charAt(0).toUpperCase();
+}
+
+function wireCliques() {
+  resultados.querySelectorAll("li[data-id]").forEach((li) =>
+    li.addEventListener("click", () =>
+      selecionar(li.dataset.id, li.dataset.nome, li.dataset.username)
+    )
+  );
+}
+
+function renderRecentes() {
+  const recentes = getRecentes();
+  if (transfHint) transfHint.textContent = "Recentes";
+
+  if (recentes.length === 0) {
+    resultados.classList.remove("resultados--recentes");
+    resultados.innerHTML =
+      "<li class='vazio'>Nenhum contato recente. Busque por nome ou @usuário acima.</li>";
+    return;
+  }
+
+  resultados.classList.add("resultados--recentes");
+  resultados.innerHTML = recentes
+    .map((u) => {
+      const nome = u.nome || (u.username ? "@" + u.username : "Usuário");
+      return `
+      <li class="contato-recente" data-id="${u.id}" data-nome="${nome.replace(/"/g, "&quot;")}" data-username="${u.username || ""}">
+        <span class="resultado-av">${inicialDe(u)}</span>
+        <span class="contato-recente-nome">${nome}</span>
+      </li>`;
+    })
+    .join("");
+  wireCliques();
+}
+
+function renderResultados(itens) {
+  resultados.classList.remove("resultados--recentes");
+  if (transfHint) transfHint.textContent = "Resultados";
+
+  if (!itens || itens.length === 0) {
+    resultados.innerHTML = "<li class='vazio'>Nenhum usuário encontrado.</li>";
+    return;
+  }
+
+  resultados.innerHTML = itens
+    .map((u) => {
+      const nome = u.nome || (u.username ? "@" + u.username : "Usuário");
+      const sub = u.username ? "@" + u.username : "";
+      return `
+      <li data-id="${u.id}" data-nome="${nome.replace(/"/g, "&quot;")}" data-username="${u.username || ""}">
+        <span class="resultado-av">${inicialDe(u)}</span>
+        <span class="resultado-info">
+          <strong>${nome}</strong>
+          <span>${sub}</span>
+        </span>
+      </li>`;
+    })
+    .join("");
+  wireCliques();
+}
+
 async function carregarUsuariosBusca(termo = "") {
+
+  if (termo === "") {
+    renderRecentes();
+    return;
+  }
+
+  resultados.classList.remove("resultados--recentes");
+  if (transfHint) transfHint.textContent = "Resultados";
   resultados.innerHTML = Array(4).fill(0).map(() => `
     <li class="skeleton-row" style="border: none; padding: 10px 0;">
       <div class="skeleton-text">
@@ -139,34 +228,7 @@ async function carregarUsuariosBusca(termo = "") {
   `).join("");
 
   const { data } = await supabase.rpc("buscar_usuarios", { p_termo: termo });
-
-  if (!data || data.length === 0) {
-    resultados.innerHTML =
-      termo === ""
-        ? "<li class='vazio'>Nenhum contato disponível ainda.</li>"
-        : "<li class='vazio'>Nenhum usuário encontrado.</li>";
-    return;
-  }
-
-  resultados.innerHTML = data
-    .map((u) => {
-      const nome = u.nome || (u.username ? "@" + u.username : "Usuário");
-      const sub = u.username ? "@" + u.username : "";
-      const inicial = (u.nome || u.username || "?").trim().charAt(0).toUpperCase();
-      return `
-      <li data-id="${u.id}" data-nome="${nome.replace(/"/g, "&quot;")}">
-        <span class="resultado-av">${inicial}</span>
-        <span class="resultado-info">
-          <strong>${nome}</strong>
-          <span>${sub}</span>
-        </span>
-      </li>`;
-    })
-    .join("");
-
-  resultados.querySelectorAll("li[data-id]").forEach((li) =>
-    li.addEventListener("click", () => selecionar(li.dataset.id, li.dataset.nome))
-  );
+  renderResultados(data || []);
 }
 
 busca.addEventListener("input", () => {
@@ -183,6 +245,7 @@ function irPasso(quem) {
 
 function resetTransfer() {
   destinatario = null;
+  destContato = null;
   transfForm.reset();
   busca.value = "";
   transfAviso.textContent = "";
@@ -190,8 +253,9 @@ function resetTransfer() {
   irPasso(true);
 }
 
-function selecionar(id, nome) {
+function selecionar(id, nome, username) {
   destinatario = id;
+  destContato = { id, nome, username: username || null };
   destinatarioNome.textContent = nome;
   destAvatar.textContent = (nome || "?").trim().charAt(0).toUpperCase();
   irPasso(false);
@@ -214,7 +278,9 @@ transfForm.addEventListener("submit", async (e) => {
   const mensagem = document.querySelector("#mensagem").value.trim() || null;
 
   const btn = document.querySelector("#btn-confirmar-transf");
+  const btnTexto = btn.innerHTML;
   btn.disabled = true;
+  btn.innerHTML = "Transferindo…";
 
   const { error } = await supabase.rpc("transferir_pontos", {
     p_destinatario_id: destinatario,
@@ -223,6 +289,7 @@ transfForm.addEventListener("submit", async (e) => {
   });
 
   btn.disabled = false;
+  btn.innerHTML = btnTexto;
 
   if (error) {
     transfAviso.textContent = error.message;
@@ -231,6 +298,7 @@ transfForm.addEventListener("submit", async (e) => {
   }
 
   tocarMoeda();
+  salvarRecente(destContato);
   modalTransf.hidden = true;
   resetTransfer();
   carregarSaldo();

@@ -1,4 +1,5 @@
 import { setAccessToken, getAccessToken } from "./auth-token.js";
+import { comLoading } from "./ui.js";
 
 const abaEntrar = document.querySelector("#aba-entrar");
 const abaPrimeiro = document.querySelector("#aba-primeiro");
@@ -7,12 +8,44 @@ const formEntrar = document.querySelector("#form-entrar");
 const formMagico = document.querySelector("#form-magico");
 const formPrimeiro = document.querySelector("#form-primeiro");
 const aviso = document.querySelector("#aviso");
+const avisoEntrar = document.querySelector("#aviso-entrar");
+const avisoMagico = document.querySelector("#aviso-magico");
+const TODOS_AVISOS = [aviso, avisoEntrar, avisoMagico];
 
 const mgEmail = document.querySelector("#mg-email");
 const mgCodigo = document.querySelector("#mg-codigo");
 let emailMagico = "";
 
 const JSON_HEADERS = { "Content-Type": "application/json" };
+
+function emailValido(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function erroCampo(input, msg) {
+  if (!input) return;
+  input.classList.add("input-erro");
+  const field = input.closest(".field") || input.parentElement;
+  let slot = field.querySelector(".campo-erro");
+  if (!slot) {
+    slot = document.createElement("span");
+    slot.className = "campo-erro";
+    field.appendChild(slot);
+  }
+  slot.textContent = msg;
+  input.focus();
+}
+function limparErroCampo(input) {
+  if (!input) return;
+  input.classList.remove("input-erro");
+  const field = input.closest(".field") || input.parentElement;
+  const slot = field && field.querySelector(".campo-erro");
+  if (slot) slot.remove();
+}
+["#email-entrar", "#email-magico", "#email-primeiro"].forEach((sel) => {
+  const inp = document.querySelector(sel);
+  if (inp) inp.addEventListener("input", () => limparErroCampo(inp));
+});
 
 
 function destinoPosLogin() {
@@ -98,30 +131,41 @@ function trocarAba(entrar) {
 }
 
 function limparAviso() {
-  aviso.textContent = "";
-  aviso.classList.remove("erro");
+  TODOS_AVISOS.forEach((a) => {
+    if (a) {
+      a.textContent = "";
+      a.classList.remove("erro");
+    }
+  });
 }
 
-function mostrarErro(msg) {
-  aviso.textContent = msg;
-  aviso.classList.add("erro");
+// Mostra erro perto da ação (alvo) ou no aviso global, se nenhum alvo for dado.
+function mostrarErro(msg, alvo = aviso) {
+  (alvo || aviso).textContent = msg;
+  (alvo || aviso).classList.add("erro");
 }
 
 formEntrar.addEventListener("submit", async (e) => {
   e.preventDefault();
   limparAviso();
 
-  const res = await fetch("/api/auth/login", {
-    method: "POST",
-    headers: JSON_HEADERS,
-    body: JSON.stringify({
-      email: document.querySelector("#email-entrar").value.trim(),
-      password: document.querySelector("#senha-entrar").value,
-    }),
+  const emailInput = document.querySelector("#email-entrar");
+  const email = emailInput.value.trim();
+  if (!emailValido(email)) return erroCampo(emailInput, "Digite um e-mail válido.");
+
+  await comLoading(e.submitter, "Entrando…", async () => {
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        email,
+        password: document.querySelector("#senha-entrar").value,
+      }),
+    });
+    const dados = await res.json();
+    if (!res.ok) return mostrarErro(dados.error || "E-mail ou senha inválidos.", avisoEntrar);
+    concluirLogin(dados);
   });
-  const dados = await res.json();
-  if (!res.ok) return mostrarErro(dados.error || "E-mail ou senha inválidos.");
-  concluirLogin(dados);
 });
 
 document.querySelector("#toggle-magico").addEventListener("click", () => {
@@ -134,39 +178,44 @@ document.querySelector("#toggle-magico").addEventListener("click", () => {
     : '<i class="ph-fill ph-magic-wand"></i> Entrar sem senha';
 });
 
-document.querySelector("#mg-enviar").addEventListener("click", async () => {
+document.querySelector("#mg-enviar").addEventListener("click", async (e) => {
   limparAviso();
-  emailMagico = document.querySelector("#email-magico").value.trim();
-  if (!emailMagico) return mostrarErro("Informe o e-mail.");
+  const emailMagicoInput = document.querySelector("#email-magico");
+  emailMagico = emailMagicoInput.value.trim();
+  if (!emailValido(emailMagico)) return erroCampo(emailMagicoInput, "Digite um e-mail válido.");
 
-  const res = await fetch("/api/auth/magic-link", {
-    method: "POST",
-    headers: JSON_HEADERS,
-    body: JSON.stringify({
-      email: emailMagico,
-      redirectTo: `${window.location.origin}/`,
-    }),
+  await comLoading(e.currentTarget, "Enviando…", async () => {
+    const res = await fetch("/api/auth/magic-link", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        email: emailMagico,
+        redirectTo: `${window.location.origin}/`,
+      }),
+    });
+    if (!res.ok) return mostrarErro("Não foi possível enviar o e-mail.", avisoMagico);
+
+    mgEmail.hidden = true;
+    mgCodigo.hidden = false;
+    avisoMagico.textContent = "Enviamos um e-mail! Clique no link OU digite o código abaixo.";
   });
-  if (!res.ok) return mostrarErro("Não foi possível enviar o e-mail.");
-
-  mgEmail.hidden = true;
-  mgCodigo.hidden = false;
-  aviso.textContent = "Enviamos um e-mail! Clique no link OU digite o código abaixo.";
 });
 
-document.querySelector("#mg-validar").addEventListener("click", async () => {
+document.querySelector("#mg-validar").addEventListener("click", async (e) => {
   limparAviso();
   const codigo = document.querySelector("#mg-cod").value.trim();
   if (!codigo) return mostrarErro("Informe o código.");
 
-  const res = await fetch("/api/auth/verify-otp", {
-    method: "POST",
-    headers: JSON_HEADERS,
-    body: JSON.stringify({ email: emailMagico, token: codigo }),
+  await comLoading(e.currentTarget, "Validando…", async () => {
+    const res = await fetch("/api/auth/verify-otp", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ email: emailMagico, token: codigo }),
+    });
+    const dados = await res.json();
+    if (!res.ok) return mostrarErro(dados.error || "Código inválido ou expirado.", avisoMagico);
+    concluirLogin(dados);
   });
-  const dados = await res.json();
-  if (!res.ok) return mostrarErro(dados.error || "Código inválido ou expirado.");
-  concluirLogin(dados);
 });
 
 const formPrimeiroAcesso = document.querySelector("#form-primeiro-acesso");
@@ -221,22 +270,24 @@ if (formPrimeiroAcesso) {
     e.preventDefault();
     limparAviso();
 
-    const email = document.querySelector("#email-primeiro").value.trim();
+    const emailInput = document.querySelector("#email-primeiro");
+    const email = emailInput.value.trim();
     const senha = document.querySelector("#nova-senha").value;
     const senha2 = document.querySelector("#nova-senha2").value;
 
+    if (!emailValido(email)) return erroCampo(emailInput, "Digite um e-mail válido.");
     if (senha.length < 6) return mostrarErro("A senha precisa de ao menos 6 caracteres.");
     if (senha !== senha2) return mostrarErro("As senhas não conferem.");
 
-    if (etapa === 1) {
-      
-      try {
-        const res = await fetch(`/api/primeiro-acesso?email=${encodeURIComponent(email)}`);
-        const { precisaNome, precisaUsername } = await res.json();
-        if (precisaNome || precisaUsername) return abrirPasso2(precisaNome, precisaUsername);
-      } catch {}
-    }
-
-    await criarConta(email, senha);
+    await comLoading(e.submitter, "Aguarde…", async () => {
+      if (etapa === 1) {
+        try {
+          const res = await fetch(`/api/primeiro-acesso?email=${encodeURIComponent(email)}`);
+          const { precisaNome, precisaUsername } = await res.json();
+          if (precisaNome || precisaUsername) return abrirPasso2(precisaNome, precisaUsername);
+        } catch {}
+      }
+      await criarConta(email, senha);
+    });
   });
 }

@@ -14,7 +14,7 @@
   </head>
   <body class="welcome-body">
     <div class="w-topbar">
-      <div class="logo"><img src="/assets/images/crcoins.webp" class="logo-coin" alt="" />CR <b>Store</b></div>
+      <div class="logo"><img src="/assets/images/crcoins.webp" class="logo-coin" alt="" /><span class="logo-cr">CR</span> <b>Store</b></div>
       <span class="w-tagline">Central de Relacionamento</span>
     </div>
 
@@ -25,7 +25,7 @@
       <!-- Right: form -->
       <div class="w-right">
         <div class="w-panel">
-          <h1>Bem-vindo à <span class="logo">CR <b>Store</b></span> ✨</h1>
+          <h1>Bem-vindo à <span class="logo"><span class="logo-cr">CR</span> <b>Store</b></span> ✨</h1>
           <p class="w-sub">Acumule pontos e troque por recompensas exclusivas.</p>
 
           <div class="abas">
@@ -34,7 +34,7 @@
           </div>
 
           <div id="bloco-entrar">
-            <form id="form-entrar">
+            <form id="form-entrar" novalidate>
               <div class="field">
                 <label for="email-entrar">E-mail</label>
                 <input id="email-entrar" type="email" placeholder="seu@email.com" required />
@@ -44,6 +44,7 @@
                 <input id="senha-entrar" type="password" placeholder="Digite sua senha" required />
               </div>
               <button type="submit">Entrar</button>
+              <p id="aviso-entrar" class="aviso"></p>
             </form>
 
             <div class="divider">
@@ -71,11 +72,23 @@
                 </div>
                 <button id="mg-validar" type="button">Entrar</button>
               </div>
+              <p id="aviso-magico" class="aviso"></p>
+            </div>
+
+            <div class="social-login">
+              <button type="button" class="btn-social" disabled>
+                <i class="ph-fill ph-google-logo"></i> Continuar com Google
+                <span class="em-breve-tag">Em breve</span>
+              </button>
+              <button type="button" class="btn-social" disabled>
+                <i class="ph-fill ph-windows-logo"></i> Continuar com Microsoft
+                <span class="em-breve-tag">Em breve</span>
+              </button>
             </div>
           </div>
 
           <div id="form-primeiro" hidden>
-            <form id="form-primeiro-acesso">
+            <form id="form-primeiro-acesso" novalidate>
               <div id="pa-passo1">
                 <p class="sub" style="margin-bottom: 12px;">Crie a senha que você usará para entrar com seu e-mail cadastrado.</p>
                 <div class="field">
@@ -125,6 +138,10 @@
       <span>Desenvolvido por</span>
       <a href="https://github.com/Ryanleoncoder" target="_blank" rel="noopener">
         <i class="ph-fill ph-github-logo"></i> Ryan Cruz
+      </a>
+      <!-- TODO: trocar href pelo LinkedIn da Maria quando disponível -->
+      <a href="#" target="_blank" rel="noopener">
+        <i class="ph-fill ph-linkedin-logo"></i> Maria Duarte
       </a>
     </div>
 

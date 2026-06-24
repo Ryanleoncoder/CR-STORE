@@ -15,7 +15,7 @@ export async function montarHeader(ativo) {
   const temAcessoAdmin = cargos && cargos.length > 0;
 
   header.innerHTML = `
-    <a href="/loja" class="logo logo-topo">CR <b>Store</b></a>
+    <a href="/loja" class="logo logo-topo"><span class="logo-cr">CR</span> <b>Store</b></a>
     <nav>
       <a href="/loja"${ativo === "loja" ? ' class="ativo"' : ""}>Loja</a>
       <a href="/desafios"${ativo === "desafios" ? ' class="ativo"' : ""}>Desafios</a>

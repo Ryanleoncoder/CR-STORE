@@ -8,20 +8,21 @@
 <style>
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
-  :root{--orange:#ec6426;--orange-deep:#d2511c;--yellow:#f8a91f;--cream:#fde3cf;--brown:#632713;--muted:#9a7c69;--border:#efdccb;--soft:#f7ece2}
-  body{font-family:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#fff;color:var(--brown)}
+  :root{--orange:#1f1f1f;--orange-deep:#000000;--yellow:#f7c600;--yellow-deep:#e0b400;--cream:#fff7d6;--brown:#1a1a1a;--coral:#f28c52;--muted:#8a8a8a;--border:#e6e6e6;--soft:#f2f2f2}
+  body{font-family:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#fafafa;color:var(--brown)}
   .topbar{padding:20px 40px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-  .logo{font-size:20px;font-weight:700;color:var(--orange)}
+  .logo{font-size:20px;font-weight:700;color:var(--brown)}
   .logo b{color:var(--brown)}
+  .logo-cr{background:var(--yellow);color:var(--brown);padding:0 .22em;border-radius:.22em}
   .topbar-hint{font-size:13px;color:var(--muted)}
   .page{min-height:calc(100vh - 65px);display:grid;grid-template-columns:1fr 1fr}
-  .left{background:linear-gradient(135deg,#fff3ea 0%,var(--cream) 50%,#ffe9d6 100%);display:flex;align-items:center;justify-content:center;padding:60px;position:relative;overflow:hidden}
+  .left{background:linear-gradient(135deg,#fafafa 0%,#fff3c4 50%,#f3f3f3 100%);display:flex;align-items:center;justify-content:center;padding:60px;position:relative;overflow:hidden}
   .four-wrap{display:flex;align-items:center;justify-content:center;user-select:none}
-  .num{font-size:clamp(100px,13vw,170px);font-weight:800;line-height:1;color:var(--orange);letter-spacing:-4px;text-shadow:0 6px 30px rgba(236,100,38,.25)}
-  .glass{font-size:clamp(80px,10vw,132px);color:var(--orange);line-height:1;margin:0 4px;display:inline-block;filter:drop-shadow(0 6px 22px rgba(236,100,38,.25));animation:scan 4s ease-in-out infinite}
+  .num{font-size:clamp(100px,13vw,170px);font-weight:800;line-height:1;color:var(--brown);letter-spacing:-4px;text-shadow:0 6px 30px rgba(0,0,0,.15)}
+  .glass{font-size:clamp(80px,10vw,132px);color:var(--brown);line-height:1;margin:0 4px;display:inline-block;filter:drop-shadow(0 6px 22px rgba(0,0,0,.18));animation:scan 4s ease-in-out infinite}
   @keyframes scan{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(7deg)}}
   .shelf{position:absolute;bottom:50px;left:50%;transform:translateX(-50%);display:flex;gap:14px}
-  .lost-tile{width:64px;height:64px;border-radius:50%;background:#fff center/cover no-repeat;box-shadow:0 6px 16px rgba(99,39,19,.14);animation:float 3s ease-in-out infinite}
+  .lost-tile{width:64px;height:64px;border-radius:50%;background:#fff center/cover no-repeat;box-shadow:0 6px 16px rgba(0,0,0,.14);animation:float 3s ease-in-out infinite}
   .lost-tile:nth-child(2){animation-delay:.4s}
   .lost-tile:nth-child(3){animation-delay:.8s}
   .lost-tile:nth-child(4){animation-delay:1.2s}
@@ -30,20 +31,20 @@
   .right{display:flex;align-items:center;justify-content:center;padding:60px}
   .copy{width:100%;max-width:400px}
   .copy h1{font-size:clamp(26px,3vw,34px);font-weight:700;color:var(--brown);line-height:1.3;margin-bottom:14px}
-  .copy h1 span{color:var(--orange)}
+  .copy h1 span{background:var(--yellow);color:var(--brown);padding:0 .22em;border-radius:.22em}
   .copy p{font-size:15px;color:var(--muted);line-height:1.7;margin-bottom:32px}
   .ctas{display:flex;gap:10px;flex-wrap:wrap}
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:9999px;border:none;font-family:inherit;font-weight:600;cursor:pointer;font-size:15px;transition:all .18s;text-decoration:none}
-  .btn-pri{background:var(--orange);color:#fff;padding:13px 26px}
-  .btn-pri:hover{background:var(--orange-deep)}
+  .btn-pri{background:var(--yellow);color:var(--brown);padding:13px 26px}
+  .btn-pri:hover{background:var(--yellow-deep)}
   .btn-sec{background:#fff;color:var(--brown);border:1px solid var(--border);padding:13px 24px}
-  .btn-sec:hover{border-color:var(--orange);color:var(--orange)}
+  .btn-sec:hover{border-color:var(--brown);color:var(--brown)}
   @media(max-width:760px){.page{grid-template-columns:1fr;grid-template-rows:auto 1fr}.left{padding:40px 20px;min-height:260px}.lost-tile{width:48px;height:48px;font-size:22px}.right{padding:40px 24px}.ctas{flex-direction:column}.btn{width:100%}}
 </style>
 </head>
 <body>
   <div class="topbar">
-    <div class="logo">CR <b>Store</b></div>
+    <div class="logo"><span class="logo-cr">CR</span> <b>Store</b></div>
     <span class="topbar-hint">Recompensas da equipe CR</span>
   </div>
   <div class="page">

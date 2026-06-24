@@ -7,6 +7,8 @@ const id = new URLSearchParams(location.search).get("id");
 const el = document.querySelector("#produto");
 const aviso = document.querySelector("#aviso");
 let produtoCarregado = null;
+let ehFavorito = false;
+let totalFav = 0;
 
 const session = await requireAuth();
 if (session) {
@@ -37,14 +39,13 @@ async function carregar() {
       </div>
     </div>`;
 
-  const [{ data: p }, { data: fav }, { data: cont }] = await Promise.all([
+  const [{ data: p }, { data: fav }] = await Promise.all([
     supabase
       .from("produtos")
-      .select("id, nome, descricao, preco, estoque, imagem_url, ativo")
+      .select("id, nome, descricao, preco, estoque, imagem_url, ativo, favoritos_total")
       .eq("id", id)
       .maybeSingle(),
     supabase.from("favoritos").select("id").eq("produto_id", id).maybeSingle(),
-    supabase.from("produtos_favoritos").select("total").eq("produto_id", id).maybeSingle(),
   ]);
 
   if (!p || !p.ativo) {
@@ -54,15 +55,15 @@ async function carregar() {
 
   produtoCarregado = p;
   const img = await urlImagem(p.imagem_url);
-  const favorito = !!fav;
-  const total = cont?.total ?? 0;
+  ehFavorito = !!fav;
+  totalFav = p.favoritos_total ?? 0;
 
   el.innerHTML = `
     <div class="produto-detalhe">
       <div class="produto-img grande">
         ${img ? `<img src="${img}" alt="${p.nome}" />` : `<span class="ph">🎁</span>`}
-        <button class="fav ${favorito ? "on" : ""}" id="fav">
-          ${favorito ? "❤️" : "🤍"} <span>${total}</span>
+        <button class="fav ${ehFavorito ? "on" : ""}" id="fav">
+          <i class="ph-fill ph-heart"></i> <span>${totalFav}</span>
         </button>
       </div>
       <div class="produto-detalhe-info">
@@ -85,19 +86,23 @@ async function carregar() {
 }
 
 async function favoritar() {
-  const { data } = await supabase
-    .from("favoritos")
-    .select("id")
-    .eq("produto_id", id)
-    .maybeSingle();
+  const btn = document.querySelector("#fav");
+  ehFavorito = !ehFavorito;
+  totalFav = Math.max(0, totalFav + (ehFavorito ? 1 : -1));
+  btn.classList.toggle("on", ehFavorito);
+  const span = btn.querySelector("span");
+  if (span) span.textContent = totalFav;
 
-  if (data) await supabase.from("favoritos").delete().eq("id", data.id);
-  else
-    await supabase
+  if (ehFavorito) {
+    await supabase.from("favoritos").insert({ usuario_id: session.user.id, produto_id: id });
+  } else {
+    const { data } = await supabase
       .from("favoritos")
-      .insert({ usuario_id: session.user.id, produto_id: id });
-
-  carregar();
+      .select("id")
+      .eq("produto_id", id)
+      .maybeSingle();
+    if (data) await supabase.from("favoritos").delete().eq("id", data.id);
+  }
 }
 
 function comprar() {
@@ -107,7 +112,7 @@ function comprar() {
 
   const btn = document.querySelector("#comprar");
   const textoOriginal = btn.textContent;
-  btn.textContent = "Adicionado! 🛒";
+  btn.innerHTML = 'Adicionado! <i class="ph-fill ph-shopping-cart"></i>';
   btn.style.backgroundColor = "var(--pos, #4caf50)";
   btn.style.color = "white";
 

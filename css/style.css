@@ -2,33 +2,33 @@
 @import url("https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css");
 
 :root {
-  /* Paleta retrô */
-  --orange: #ec6426;
-  --orange-deep: #d2511c;
-  --yellow: #f8a91f;
-  --cream: #fde3cf;
-  --brown: #632713;
+  --orange: #1f1f1f;       
+  --orange-deep: #000000;
+  --yellow: #f7c600;        
+  --yellow-deep: #e0b400;
+  --cream: #fff7d6;        
+  --brown: #1a1a1a;       
 
-  /* Papéis (estrutura Airbnb, cores retrô) */
-  --canvas: #fbf3ea;
+  /* Papéis */
+  --canvas: #f5f5f5;       
   --surface: #ffffff;
-  --ink: #632713;
-  --body: #6b4a36;
-  --muted: #9a7c69;
-  --border: #efdccb;
-  --soft: #f7ece2;
+  --ink: #1a1a1a;        
+  --body: #3a3a3a;
+  --muted: #8a8a8a;
+  --border: #e6e6e6;
+  --soft: #f2f2f2;
 
-  /* Status */
-  --pos: #2e7d32;
+
+  --coral: #f28c52;         
+  --pos: #4caf50;
   --neg: #c0392b;
 
-  /* Sombras (subtle / elevated) */
-  --sh: rgba(99, 39, 19, 0.03) 0 0 0 1px, rgba(99, 39, 19, 0.05) 0 2px 6px,
-    rgba(99, 39, 19, 0.08) 0 4px 10px;
-  --sh2: rgba(99, 39, 19, 0.04) 0 0 0 1px, rgba(99, 39, 19, 0.1) 0 6px 16px,
-    rgba(99, 39, 19, 0.14) 0 10px 24px;
+  --sh: rgba(0, 0, 0, 0.03) 0 0 0 1px, rgba(0, 0, 0, 0.05) 0 2px 6px,
+    rgba(0, 0, 0, 0.08) 0 4px 10px;
+  --sh2: rgba(0, 0, 0, 0.04) 0 0 0 1px, rgba(0, 0, 0, 0.1) 0 6px 16px,
+    rgba(0, 0, 0, 0.14) 0 10px 24px;
 
-  /* Raios */
+
   --r-card: 20px;
   --r-input: 14px;
   --r-pill: 9999px;
@@ -78,8 +78,14 @@ h2 {
 }
 
 .logo {
-  color: var(--orange);
+  color: var(--ink);
   font-weight: 700;
+}
+.logo-cr {
+  background: var(--yellow);
+  color: var(--ink);
+  padding: 0 0.22em;
+  border-radius: 0.22em;
 }
 .logo b {
   color: var(--ink);
@@ -104,7 +110,17 @@ input::placeholder {
 }
 input:focus {
   border-color: var(--orange);
-  box-shadow: 0 0 0 3px rgba(236, 100, 38, 0.15);
+  box-shadow: 0 0 0 3px rgba(247, 198, 0, 0.3);
+}
+.input-erro,
+.input-erro:focus {
+  border-color: var(--neg);
+  box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.15);
+}
+.campo-erro {
+  color: var(--neg);
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .field {
@@ -125,15 +141,15 @@ button {
   cursor: pointer;
   border: none;
   border-radius: var(--r-pill);
-  background: var(--orange);
-  color: #fff;
+  background: var(--yellow);
+  color: var(--ink);
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 700;
   padding: 13px 24px;
   transition: background 0.18s, box-shadow 0.18s, transform 0.1s;
 }
 button:hover {
-  background: var(--orange-deep);
+  background: var(--yellow-deep);
 }
 button:active {
   transform: translateY(1px);
@@ -156,7 +172,15 @@ button:disabled {
 }
 .link:hover {
   background: none;
-  color: var(--orange);
+  color: var(--ink);
+}
+#sair {
+  padding: 6px 12px;
+  border-radius: var(--r-pill);
+}
+#sair:hover {
+  background: var(--yellow);
+  color: var(--ink);
 }
 .link-centro {
   align-self: center;
@@ -250,7 +274,7 @@ button:disabled {
 }
 
 .w-left {
-  background: linear-gradient(135deg, #fff0f5 0%, #fde3cf 40%, #f5f0ff 80%, #f0fff8 100%);
+  background: linear-gradient(135deg, #fafafa 0%, #fff3c4 45%, #f3f3f3 80%, #fafafa 100%);
   display: flex;
   flex-wrap: wrap;
   align-content: center;
@@ -289,8 +313,8 @@ button:disabled {
 
 .w-right {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
   padding: 60px 40px;
 }
 
@@ -300,6 +324,8 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  /* Centra na vertical quando há espaço, sem cortar o topo no overflow */
+  margin: auto 0;
 }
 .w-panel h1 {
   font-size: 26px;
@@ -379,8 +405,8 @@ button:disabled {
   color: var(--ink);
 }
 .aba.ativa {
-  background: var(--orange);
-  color: #fff;
+  background: var(--yellow);
+  color: var(--ink);
 }
 
 .card form,
@@ -399,6 +425,60 @@ button:disabled {
 .passo[hidden],
 #form-magico[hidden] {
   display: none !important;
+}
+
+/* Primeiro acesso: passos em coluna (botão full-width igual o Entrar) */
+#pa-passo1,
+#pa-passo2 {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Logins sociais (visual / em breve) */
+.social-login {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+.btn-social {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  border-radius: var(--r-pill);
+  padding: 12px;
+  font-weight: 600;
+  font-size: 14px;
+}
+.btn-social i[class*="ph-"] {
+  font-size: 18px;
+}
+.btn-social:disabled {
+  background: var(--surface);
+  color: var(--ink);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+.em-breve-tag {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--soft);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 3px 7px;
+  border-radius: 9999px;
 }
 
 .divider {
@@ -477,8 +557,8 @@ button:disabled {
   color: var(--ink);
 }
 .topo nav a.ativo {
-  background: var(--orange);
-  color: #fff;
+  background: var(--yellow);
+  color: var(--ink);
 }
 
 /* Bottom nav (mobile) — barra fixa estilo app */
@@ -545,7 +625,7 @@ button:disabled {
     font-size: 22px;
   }
   .bn-item.on {
-    color: var(--orange);
+    color: var(--ink);
   }
   .bn-ico {
     position: relative;
@@ -603,7 +683,7 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  box-shadow: 0 10px 30px rgba(236, 100, 38, 0.35);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
   position: relative;
   overflow: hidden;
 }
@@ -707,7 +787,7 @@ button:disabled {
 }
 .search-pill-inline:focus-within {
   border-color: var(--orange);
-  box-shadow: 0 0 0 3px rgba(236, 100, 38, 0.15);
+  box-shadow: 0 0 0 3px rgba(247, 198, 0, 0.3);
 }
 .search-pill-inline span {
   color: var(--muted);
@@ -1329,12 +1409,12 @@ button:disabled {
 /* ================================================================
    PRODUCT BG COLORS (placeholder)
    ================================================================ */
-.bg-warm  { background: linear-gradient(135deg, #fde3cf 0%, #f7ece2 100%); }
-.bg-pink  { background: linear-gradient(135deg, #fff0f5 0%, #fde3cf 100%); }
-.bg-mint  { background: linear-gradient(135deg, #f0fff8 0%, #e8f5e9 100%); }
+.bg-warm  { background: linear-gradient(135deg, #fff7d6 0%, #f7f7f7 100%); }
+.bg-pink  { background: linear-gradient(135deg, #ffe9d6 0%, #f7f7f7 100%); }
+.bg-mint  { background: linear-gradient(135deg, #e8f5e9 0%, #f7f7f7 100%); }
 .bg-gold  { background: linear-gradient(135deg, #fffaec 0%, #fff3cd 100%); }
-.bg-lilac { background: linear-gradient(135deg, #f5f0ff 0%, #ede7f6 100%); }
-.bg-peach { background: linear-gradient(135deg, #fff8f0 0%, #fbe9e7 100%); }
+.bg-lilac { background: linear-gradient(135deg, #f0f0f0 0%, #e6e6e6 100%); }
+.bg-peach { background: linear-gradient(135deg, #fff3ea 0%, #ffe2cc 100%); }
 
 /* Coin icon (SVG Token representation) */
 .coin-token {
@@ -1441,7 +1521,7 @@ button:disabled {
 .modal-bg {
   position: fixed;
   inset: 0;
-  background: rgba(99, 39, 19, 0.45);
+  background: rgba(0, 0, 0, 0.45);
   z-index: 300;
   display: flex;
   align-items: center;
@@ -2309,6 +2389,22 @@ button:disabled {
 /* ---------- Pedidos: card ---------- */
 .pedidos-grade-lista {
   list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.ver-mais {
+  display: block;
+  margin: 20px auto 8px;
+  background: none;
+  color: var(--ink);
+  border: 1px solid var(--border);
+  padding: 11px 24px;
+  font-weight: 700;
+}
+.ver-mais:hover {
+  background: var(--soft);
+  border-color: var(--ink);
 }
 .pedido-card {
   background: var(--surface);
@@ -2437,12 +2533,39 @@ button:disabled {
   background: var(--soft);
   border-color: var(--border);
 }
+
+/* Recentes: cards lado a lado */
+.resultados--recentes {
+  flex-direction: row;
+  gap: 10px;
+  max-height: none;
+  overflow: visible;
+}
+.resultados--recentes .contato-recente {
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 8px;
+  border-color: var(--border);
+}
+.contato-recente-nome {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+}
 .resultado-av,
 .transf-dest-av {
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--yellow), var(--orange));
+  background: var(--ink);
   color: #fff;
   font-weight: 700;
   font-size: 16px;
@@ -2530,7 +2653,7 @@ button:disabled {
 }
 .transf-valor-wrap:focus-within {
   border-color: var(--orange);
-  box-shadow: 0 0 0 3px rgba(236, 100, 38, 0.15);
+  box-shadow: 0 0 0 3px rgba(247, 198, 0, 0.3);
 }
 .transf-valor-wrap .coin-token {
   width: 28px;
@@ -2771,7 +2894,7 @@ i[class*="ph-"] {
   height: 84px;
   object-fit: contain;
   animation: coin-flip 1.1s cubic-bezier(0.45, 0, 0.55, 1) infinite;
-  filter: drop-shadow(0 6px 8px rgba(99, 39, 19, 0.25));
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.25));
 }
 @keyframes coin-flip {
   0% { transform: rotateY(0); }
@@ -2782,7 +2905,7 @@ i[class*="ph-"] {
   height: 9px;
   margin-top: 12px;
   border-radius: 50%;
-  background: rgba(99, 39, 19, 0.18);
+  background: rgba(0, 0, 0, 0.18);
   filter: blur(2px);
   animation: coin-shadow 1.1s ease-in-out infinite;
 }
@@ -2815,7 +2938,7 @@ i[class*="ph-"] {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  filter: drop-shadow(0 4px 6px rgba(99, 39, 19, 0.15));
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.15));
 }
 .flaticon-credit,
 .dev-credit {
@@ -2832,11 +2955,17 @@ i[class*="ph-"] {
 .dev-credit { right: 14px; }
 .flaticon-credit a,
 .dev-credit a {
-  color: var(--orange);
-  text-decoration: underline;
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: inset 0 -0.5em 0 rgba(247, 198, 0, 0.55);
+  transition: box-shadow 0.2s ease;
+}
+.flaticon-credit a:hover,
+.dev-credit a:hover {
+  box-shadow: inset 0 -1em 0 rgba(247, 198, 0, 0.8);
 }
 .dev-credit a {
-  font-weight: 600;
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -2871,5 +3000,5 @@ i[class*="ph-"] {
   object-fit: contain;
   vertical-align: -0.42em;
   margin-right: 6px;
-  filter: drop-shadow(0 1px 1.5px rgba(99, 39, 19, 0.2));
+  filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.2));
 }
