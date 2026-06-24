@@ -7,8 +7,10 @@ export async function getAccessToken() {
   if (inflight) return inflight;
 
   inflight = (async () => {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 8000);
     try {
-      const res = await fetch("/api/auth/token", { method: "POST" });
+      const res = await fetch("/api/auth/token", { method: "POST", signal: ctrl.signal });
       if (!res.ok) {
         cache = null;
         return null;
@@ -20,6 +22,7 @@ export async function getAccessToken() {
       cache = null;
       return null;
     } finally {
+      clearTimeout(timer);
       inflight = null;
     }
   })();

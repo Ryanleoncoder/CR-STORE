@@ -7,12 +7,6 @@ export async function montarHeader(ativo) {
   if (!header) return;
   header.className = "topo";
 
-  const { data: cargos } = await supabase
-    .from("usuario_cargos")
-    .select("cargos!inner(codigo)")
-    .in("cargos.codigo", ["admin", "estoque", "campanhas"]);
-
-  const temAcessoAdmin = cargos && cargos.length > 0;
 
   header.innerHTML = `
     <a href="/loja" class="logo logo-topo"><span class="logo-cr">CR</span> <b>Store</b></a>
@@ -21,7 +15,6 @@ export async function montarHeader(ativo) {
       <a href="/desafios"${ativo === "desafios" ? ' class="ativo"' : ""}>Desafios</a>
       <a href="/carteira"${ativo === "carteira" ? ' class="ativo"' : ""}>Carteira</a>
       <a href="/meus-pedidos"${ativo === "pedidos" ? ' class="ativo"' : ""}>Meus pedidos</a>
-      ${temAcessoAdmin ? '<a href="/admin">Admin</a>' : ""}
     </nav>
     <div class="topo-dir">
       <div class="notif-wrapper">
@@ -57,6 +50,17 @@ export async function montarHeader(ativo) {
     </div>`;
 
   document.querySelector("#sair").addEventListener("click", logout);
+
+  // Admin é assíncrono (depende de cargos) — entra depois, sem segurar o header.
+  const { data: cargos } = await supabase
+    .from("usuario_cargos")
+    .select("cargos!inner(codigo)")
+    .in("cargos.codigo", ["admin", "estoque", "campanhas"]);
+  const temAcessoAdmin = cargos && cargos.length > 0;
+
+  if (temAcessoAdmin) {
+    header.querySelector("nav")?.insertAdjacentHTML("beforeend", '<a href="/admin">Admin</a>');
+  }
 
   if (!document.querySelector(".bottom-nav")) {
     const on = (sec) => (ativo === sec ? " on" : "");
