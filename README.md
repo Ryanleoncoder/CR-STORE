@@ -7,10 +7,10 @@ Plataforma de recompensas interna: carteira de pontos e resgate de produtos.
 Acesso por whitelist. Primeiro acesso valida o e-mail por código (Supabase Auth);
 depois, login por e-mail e senha.
 
-## Time
+## Time e Contribuições
 
-- Maria — frontend e design (HTML, CSS, JS)
-- Ryan — banco, infra e backend
+* **Maria** — Product Design (Concepção do produto, UX/UI, identidade visual e mapeamento de fluxos).
+* **Ryan** — Engenharia de Software (Levantamento de requisitos, arquitetura dimensionada por volume de usuários, modelagem de banco de dados, infraestrutura e frontend).
 
 ## Módulos
 
@@ -63,3 +63,13 @@ autogerenciado.
 ├── vite.config.js
 └── .env.example
 ```
+
+## Licença e Atribuições
+
+Esta plataforma utiliza recursos de terceiros sob licenças de uso livre:
+
+- **Avatares Personalizados**: O criador de perfil utiliza o estilo **Big Smile** do [DiceBear](https://www.dicebear.com/styles/big-smile/), que é uma remixagem da biblioteca de avatares desenvolvida por [Ashley Seo](https://www.ashleyseo.com/) sob a licença [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).
+  - **Obra original**: [Custom Avatar no Figma Community](https://www.figma.com/community/file/881358461963645496/custom-avatar).
+  - **Modificações**: Integrada à API DiceBear v10.x para customização paramétrica em tempo real no front-end, convertendo a imagem vetorial final em `Data-URI` armazenada localmente para carregamento offline instantâneo.
+- **Ilustrações**: Ilustrações por Stickers do [Flaticon](https://www.flaticon.com/).
+

@@ -13,7 +13,7 @@ const passoValor = document.querySelector("#transf-passo-valor");
 const transfForm = document.querySelector("#transf-form");
 const transfTitulo = document.querySelector("#transf-titulo");
 const destinatarioNome = document.querySelector("#destinatario-nome");
-const destAvatar = document.querySelector("#dest-avatar");
+const destAvatarContainer = document.querySelector("#dest-avatar-container");
 const transfAviso = document.querySelector("#transf-aviso");
 
 const valorInput = document.querySelector("#valor");
@@ -154,7 +154,7 @@ function inicialDe(u) {
 function wireCliques() {
   resultados.querySelectorAll("li[data-id]").forEach((li) =>
     li.addEventListener("click", () =>
-      selecionar(li.dataset.id, li.dataset.nome, li.dataset.username)
+      selecionar(li.dataset.id, li.dataset.nome, li.dataset.username, li.dataset.avatarUrl)
     )
   );
 }
@@ -174,9 +174,12 @@ async function renderRecentesCarteira() {
   row.innerHTML = recentes
     .map((u) => {
       const nome = u.nome || (u.username ? "@" + u.username : "Usuário");
+      const avHtml = u.avatar_url 
+        ? `<img class="resultado-av" src="${u.avatar_url}" alt="Avatar" />`
+        : `<span class="resultado-av">${inicialDe(u)}</span>`;
       return `
-      <li class="recente-card" data-id="${u.id}" data-nome="${nome.replace(/"/g, "&quot;")}" data-username="${u.username || ""}">
-        <span class="resultado-av">${inicialDe(u)}</span>
+      <li class="recente-card" data-id="${u.id}" data-nome="${nome.replace(/"/g, "&quot;")}" data-username="${u.username || ""}" data-avatar-url="${u.avatar_url || ""}">
+        ${avHtml}
         <span class="recente-nome">${nome}</span>
       </li>`;
     })
@@ -184,16 +187,16 @@ async function renderRecentesCarteira() {
 
   row.querySelectorAll("li[data-id]").forEach((li) =>
     li.addEventListener("click", () =>
-      abrirTransferenciaCom(li.dataset.id, li.dataset.nome, li.dataset.username)
+      abrirTransferenciaCom(li.dataset.id, li.dataset.nome, li.dataset.username, li.dataset.avatarUrl)
     )
   );
 }
 
-function abrirTransferenciaCom(id, nome, username) {
+function abrirTransferenciaCom(id, nome, username, avatar_url) {
   resetTransfer();
   modalTransf.hidden = false;
   carregarUsuariosBusca("");
-  selecionar(id, nome, username); 
+  selecionar(id, nome, username, avatar_url); 
 }
 
 function renderResultados(itens) {
@@ -207,9 +210,12 @@ function renderResultados(itens) {
       const nome = u.nome || (u.username ? "@" + u.username : "Usuário");
       const sub = u.username ? "@" + u.username : "";
       const sel = u.id === destinatario ? " selecionado" : "";
+      const avHtml = u.avatar_url 
+        ? `<img class="resultado-av" src="${u.avatar_url}" alt="Avatar" />`
+        : `<span class="resultado-av">${inicialDe(u)}</span>`;
       return `
-      <li class="resultado-item${sel}" data-id="${u.id}" data-nome="${nome.replace(/"/g, "&quot;")}" data-username="${u.username || ""}">
-        <span class="resultado-av">${inicialDe(u)}</span>
+      <li class="resultado-item${sel}" data-id="${u.id}" data-nome="${nome.replace(/"/g, "&quot;")}" data-username="${u.username || ""}" data-avatar-url="${u.avatar_url || ""}">
+        ${avHtml}
         <span class="resultado-info">
           <strong>${nome}</strong>
           <span>${sub}</span>
@@ -278,11 +284,20 @@ function resetTransfer() {
   resultados.querySelectorAll(".resultado-item").forEach((li) => li.classList.remove("selecionado"));
 }
 
-function selecionar(id, nome, username) {
+function selecionar(id, nome, username, avatar_url) {
   destinatario = id;
-  destContato = { id, nome, username: username || null };
+  destContato = { id, nome, username: username || null, avatar_url: avatar_url || null };
   destinatarioNome.textContent = nome;
-  destAvatar.textContent = (nome || "?").trim().charAt(0).toUpperCase();
+  
+  if (destAvatarContainer) {
+    if (avatar_url) {
+      destAvatarContainer.innerHTML = `<img class="transf-dest-av lg" id="dest-avatar" src="${avatar_url}" alt="Avatar" />`;
+    } else {
+      const inicial = (nome || "?").trim().charAt(0).toUpperCase();
+      destAvatarContainer.innerHTML = `<span class="transf-dest-av lg" id="dest-avatar">${inicial}</span>`;
+    }
+  }
+
   document.querySelector("#dest-username").textContent = username ? "@" + username : "";
   document.querySelector("#transf-saldo-disp").textContent = saldoAtual + " CRC";
   transfVazio.hidden = true;

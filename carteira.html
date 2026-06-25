@@ -92,12 +92,14 @@
               <button type="button" id="transf-voltar" class="voltar-transf"><i class="ph-fill ph-arrow-left"></i> Voltar</button>
               <div class="transf-coin-badge"><img src="/assets/images/crcoins.webp" alt="" /></div>
               <p class="transf-para">Transferência para</p>
-              <span class="transf-dest-av lg" id="dest-avatar">?</span>
+              <div id="dest-avatar-container" style="display: flex; justify-content: center; margin-bottom: 8px;">
+                <span class="transf-dest-av lg" id="dest-avatar">?</span>
+              </div>
               <strong id="destinatario-nome"></strong>
               <span id="dest-username" class="sub"></span>
               <hr class="transf-divider" />
               <form id="transf-form">
-                <label>Quantidade de CRCoins</label>
+                <label for="valor">Quantidade de CRCoins</label>
                 <div class="transf-stepper">
                   <button type="button" id="valor-menos" aria-label="Diminuir">−</button>
                   <div class="transf-stepper-mid">

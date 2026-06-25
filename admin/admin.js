@@ -105,10 +105,17 @@ async function carregar() {
     </li>
   `).join("");
 
-  const res = await fetch("/api/usuarios", { headers: await authHeaders() });
-  if (res.ok) {
+  try {
+    const res = await fetch("/api/usuarios", { headers: await authHeaders() });
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.error || "Erro ao carregar usuários.");
+    }
     usuariosTodos = await res.json();
     renderUsuarios(usuariosTodos);
+  } catch (err) {
+    console.error(err);
+    listaEl.innerHTML = `<li class="vazio" style="color: var(--neg, #ef4444); font-weight: 600;">${err.message || "Erro de conexão ao carregar usuários."}</li>`;
   }
 }
 
@@ -145,6 +152,9 @@ function renderUsuarios(usuarios) {
         (c) =>
           `<option value="${c.codigo}" ${c.codigo === cargoAtual ? "selected" : ""}>${c.nome}</option>`
       ).join("");
+      const actionButton = u.ativo
+        ? (!ehEu ? `<button class="link btn-desativar" data-id="${u.id}">desativar</button>` : "")
+        : `<button class="link btn-ativar" data-id="${u.id}" style="color: var(--pos, #4caf50); font-weight: 600;">reativar</button>`;
 
       return `
         <li class="usuario ${u.ativo ? "" : "inativo"}">
@@ -156,11 +166,7 @@ function renderUsuarios(usuarios) {
             <select class="select-cargo select-retro" data-cargo="${u.id}"${ehEu ? " disabled title='Você não pode mudar o próprio cargo'" : ""}>${options}</select>
             <input type="number" class="ajuste" placeholder="± pts" data-id="${u.id}" />
             <button class="btn-ajuste" data-id="${u.id}">Ajustar</button>
-            ${
-              u.ativo && !ehEu
-                ? `<button class="link btn-desativar" data-id="${u.id}">desativar</button>`
-                : ""
-            }
+            ${actionButton}
           </div>
         </li>`;
     })
@@ -171,6 +177,9 @@ function renderUsuarios(usuarios) {
   );
   listaEl.querySelectorAll(".btn-desativar").forEach((btn) =>
     btn.addEventListener("click", () => desativar(btn.dataset.id))
+  );
+  listaEl.querySelectorAll(".btn-ativar").forEach((btn) =>
+    btn.addEventListener("click", () => reativar(btn.dataset.id))
   );
   listaEl.querySelectorAll(".select-cargo").forEach((sel) =>
     sel.addEventListener("change", () => mudarCargo(sel.dataset.cargo, sel.value))
@@ -194,7 +203,7 @@ async function mudarCargo(usuarioId, cargo) {
     return;
   }
 
-  listaAviso.textContent = "Cargo atualizado.";
+  listaAviso.textContent = "Cargo updated.";
   carregar();
 }
 
@@ -259,6 +268,27 @@ async function desativar(usuarioId) {
     return;
   }
 
+  carregar();
+}
+
+async function reativar(usuarioId) {
+  listaAviso.textContent = "";
+  listaAviso.classList.remove("erro");
+
+  const res = await fetch("/api/usuarios", {
+    method: "PATCH",
+    headers: await authHeaders(),
+    body: JSON.stringify({ usuario_id: usuarioId, ativo: true }),
+  });
+
+  if (!res.ok) {
+    const dados = await res.json();
+    listaAviso.textContent = dados.error || "Erro ao reativar.";
+    listaAviso.classList.add("erro");
+    return;
+  }
+
+  listaAviso.textContent = "Usuário reativado com sucesso.";
   carregar();
 }
 
@@ -498,7 +528,13 @@ if (prodBusca) {
   prodBusca.addEventListener("input", () => {
     const t = prodBusca.value.trim().toLowerCase();
     renderProdutos(
-      t ? produtosTodos.filter((p) => p.nome.toLowerCase().includes(t)) : produtosTodos
+      t
+        ? produtosTodos.filter(
+            (p) =>
+              p.nome.toLowerCase().includes(t) ||
+              (p.categoria || "").toLowerCase().includes(t)
+          )
+        : produtosTodos
     );
   });
 }
@@ -685,7 +721,10 @@ function filtrarEApresentarPedidos() {
       (p) =>
         (p.usuarios?.nome || "").toLowerCase().includes(t) ||
         (p.usuarios?.email || "").toLowerCase().includes(t) ||
-        p.id.toLowerCase().includes(t)
+        p.id.toLowerCase().includes(t) ||
+        (p.pedido_itens ?? []).some((it) =>
+          (it.produtos?.nome || "").toLowerCase().includes(t)
+        )
     );
   }
   renderPedidos(filtrados);
@@ -793,10 +832,25 @@ async function renderPedidos(pedidos) {
         .map((st) => `<option value="${st}" ${p.status === st ? "selected" : ""}>${st.toUpperCase()}</option>`)
         .join("");
 
+      let slaBadge = "";
+      if (p.status === "pendente" || p.status === "confirmado") {
+        const horas = Math.floor((new Date() - new Date(p.criado_em)) / (1000 * 60 * 60));
+        if (horas >= 48) {
+          slaBadge = `<span class="badge-sla-atrasado" style="background: #fee2e2; color: #ef4444; border: 1px solid #fca5a5; font-size: 10px; padding: 3px 6px; border-radius: 4px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; vertical-align: middle;"><i class="ph-fill ph-warning-octagon"></i> CRÍTICO (+48h)</span>`;
+        } else if (horas >= 24) {
+          slaBadge = `<span class="badge-sla-alerta" style="background: #ffedd5; color: #f97316; border: 1px solid #fed7aa; font-size: 10px; padding: 3px 6px; border-radius: 4px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; vertical-align: middle;"><i class="ph-fill ph-warning"></i> ATENÇÃO (+24h)</span>`;
+        } else {
+          slaBadge = `<span class="badge-sla-ok" style="background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; font-size: 10px; padding: 3px 6px; border-radius: 4px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; vertical-align: middle;"><i class="ph-fill ph-clock"></i> NO PRAZO</span>`;
+        }
+      }
+
       return `
         <li class="pedido-card status-${p.status}">
-          <div class="pedido-card-header">
-            <strong>Pedido #${p.id.slice(0, 8)}</strong>
+          <div class="pedido-card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <div>
+              <strong>Pedido #${p.id.slice(0, 8)}</strong>
+              ${slaBadge}
+            </div>
             <span class="badge-${p.status}" style="font-weight: 700; font-size: 11px; padding: 4px 8px; border-radius: 4px;">${p.status.toUpperCase()}</span>
           </div>
           <div class="pedido-card-body">

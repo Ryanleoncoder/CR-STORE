@@ -102,27 +102,49 @@ export default async function handler(req, res) {
   }
 
   if (req.method === "PATCH") {
-    const { usuario_id, cargo_codigo } = req.body || {};
-    if (!usuario_id || !cargo_codigo) {
-      return res.status(400).json({ error: "Informe usuario_id e cargo_codigo" });
-    }
-    if (usuario_id === auth.user.id) {
-      return res.status(400).json({ error: "Você não pode mudar o próprio cargo" });
+    const { usuario_id, cargo_codigo, ativo } = req.body || {};
+    if (!usuario_id) {
+      return res.status(400).json({ error: "Informe o usuario_id" });
     }
 
-    const { data: cargo } = await admin
-      .from("cargos")
-      .select("id")
-      .eq("codigo", cargo_codigo)
-      .maybeSingle();
-    if (!cargo) return res.status(400).json({ error: "Cargo inválido" });
+    if (typeof ativo === "boolean") {
+      const { data: u } = await admin
+        .from("usuarios")
+        .select("email")
+        .eq("id", usuario_id)
+        .maybeSingle();
 
-    // Substitui o cargo do usuário pelo escolhido (cargo único por usuário)
-    await admin.from("usuario_cargos").delete().eq("usuario_id", usuario_id);
-    const { error } = await admin
-      .from("usuario_cargos")
-      .insert({ usuario_id, cargo_id: cargo.id });
-    if (error) return res.status(500).json({ error: error.message });
+      const { error } = await admin
+        .from("usuarios")
+        .update({ ativo })
+        .eq("id", usuario_id);
+      
+      if (error) return res.status(500).json({ error: error.message });
+
+      if (u?.email) {
+        await admin.from("whitelist").update({ ativo }).eq("email", u.email);
+      }
+    }
+
+    if (cargo_codigo) {
+      if (usuario_id === auth.user.id) {
+        return res.status(400).json({ error: "Você não pode mudar o próprio cargo" });
+      }
+
+      const { data: cargo } = await admin
+        .from("cargos")
+        .select("id")
+        .eq("codigo", cargo_codigo)
+        .maybeSingle();
+      if (!cargo) return res.status(400).json({ error: "Cargo inválido" });
+
+      // Substitui o cargo do usuário pelo escolhido (cargo único por usuário)
+      await admin.from("usuario_cargos").delete().eq("usuario_id", usuario_id);
+      const { error } = await admin
+        .from("usuario_cargos")
+        .insert({ usuario_id, cargo_id: cargo.id });
+      if (error) return res.status(500).json({ error: error.message });
+    }
 
     return res.status(200).json({ ok: true });
   }
