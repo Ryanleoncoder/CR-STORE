@@ -16,36 +16,37 @@ const destinatarioNome = document.querySelector("#destinatario-nome");
 const destAvatar = document.querySelector("#dest-avatar");
 const transfAviso = document.querySelector("#transf-aviso");
 
+const valorInput = document.querySelector("#valor");
+if (valorInput) {
+  valorInput.addEventListener("input", () => {
+    valorInput.value = valorInput.value.replace(/\D/g, "");
+    atualizarBotaoValor();
+  });
+}
+
+function mostrarErroTransf(msg) {
+  transfAviso.textContent = msg;
+  transfAviso.classList.add("erro");
+}
+
 const session = await requireAuth();
 let destinatario = null;
 let destContato = null;
 let buscaTimer;
-
-const RECENTES_KEY = "cr_transf_recentes";
-function getRecentes() {
-  try {
-    return JSON.parse(localStorage.getItem(RECENTES_KEY) || "[]");
-  } catch {
-    return [];
-  }
-}
-function salvarRecente(c) {
-  if (!c?.id) return;
-  const lista = getRecentes().filter((x) => x.id !== c.id);
-  lista.unshift({ id: c.id, nome: c.nome, username: c.username || null });
-  localStorage.setItem(RECENTES_KEY, JSON.stringify(lista.slice(0, 3)));
-}
+let saldoAtual = 0;
 
 if (session) {
   montarHeader("carteira");
   carregarSaldo();
   carregarResumo();
   carregarExtrato();
+  renderRecentesCarteira();
 }
 
 async function carregarSaldo() {
   const { data } = await supabase.from("carteiras").select("saldo").single();
-  saldoEl.textContent = data?.saldo ?? 0;
+  saldoAtual = data?.saldo ?? 0;
+  saldoEl.textContent = saldoAtual;
 }
 
 async function carregarResumo() {
@@ -158,35 +159,44 @@ function wireCliques() {
   );
 }
 
-function renderRecentes() {
-  const recentes = getRecentes();
-  if (transfHint) transfHint.textContent = "Recentes";
+async function renderRecentesCarteira() {
+  const bloco = document.querySelector("#recentes-bloco");
+  const row = document.querySelector("#recentes-carteira");
+  if (!bloco || !row) return;
 
-  if (recentes.length === 0) {
-    resultados.classList.remove("resultados--recentes");
-    resultados.innerHTML =
-      "<li class='vazio'>Nenhum contato recente. Busque por nome ou @usuário acima.</li>";
+  const { data: recentes } = await supabase.rpc("contatos_recentes");
+  if (!recentes || recentes.length === 0) {
+    bloco.hidden = true;
     return;
   }
 
-  resultados.classList.add("resultados--recentes");
-  resultados.innerHTML = recentes
+  bloco.hidden = false;
+  row.innerHTML = recentes
     .map((u) => {
       const nome = u.nome || (u.username ? "@" + u.username : "Usuário");
       return `
-      <li class="contato-recente" data-id="${u.id}" data-nome="${nome.replace(/"/g, "&quot;")}" data-username="${u.username || ""}">
+      <li class="recente-card" data-id="${u.id}" data-nome="${nome.replace(/"/g, "&quot;")}" data-username="${u.username || ""}">
         <span class="resultado-av">${inicialDe(u)}</span>
-        <span class="contato-recente-nome">${nome}</span>
+        <span class="recente-nome">${nome}</span>
       </li>`;
     })
     .join("");
-  wireCliques();
+
+  row.querySelectorAll("li[data-id]").forEach((li) =>
+    li.addEventListener("click", () =>
+      abrirTransferenciaCom(li.dataset.id, li.dataset.nome, li.dataset.username)
+    )
+  );
+}
+
+function abrirTransferenciaCom(id, nome, username) {
+  resetTransfer();
+  modalTransf.hidden = false;
+  carregarUsuariosBusca("");
+  selecionar(id, nome, username); 
 }
 
 function renderResultados(itens) {
-  resultados.classList.remove("resultados--recentes");
-  if (transfHint) transfHint.textContent = "Resultados";
-
   if (!itens || itens.length === 0) {
     resultados.innerHTML = "<li class='vazio'>Nenhum usuário encontrado.</li>";
     return;
@@ -196,13 +206,15 @@ function renderResultados(itens) {
     .map((u) => {
       const nome = u.nome || (u.username ? "@" + u.username : "Usuário");
       const sub = u.username ? "@" + u.username : "";
+      const sel = u.id === destinatario ? " selecionado" : "";
       return `
-      <li data-id="${u.id}" data-nome="${nome.replace(/"/g, "&quot;")}" data-username="${u.username || ""}">
+      <li class="resultado-item${sel}" data-id="${u.id}" data-nome="${nome.replace(/"/g, "&quot;")}" data-username="${u.username || ""}">
         <span class="resultado-av">${inicialDe(u)}</span>
         <span class="resultado-info">
           <strong>${nome}</strong>
           <span>${sub}</span>
         </span>
+        <span class="resultado-check"><i class="ph-fill ph-check-circle"></i></span>
       </li>`;
     })
     .join("");
@@ -210,14 +222,6 @@ function renderResultados(itens) {
 }
 
 async function carregarUsuariosBusca(termo = "") {
-
-  if (termo === "") {
-    renderRecentes();
-    return;
-  }
-
-  resultados.classList.remove("resultados--recentes");
-  if (transfHint) transfHint.textContent = "Resultados";
   resultados.innerHTML = Array(4).fill(0).map(() => `
     <li class="skeleton-row" style="border: none; padding: 10px 0;">
       <div class="skeleton-text">
@@ -228,7 +232,8 @@ async function carregarUsuariosBusca(termo = "") {
   `).join("");
 
   const { data } = await supabase.rpc("buscar_usuarios", { p_termo: termo });
-  renderResultados(data || []);
+  const filtrados = (data || []).filter((u) => u.id !== session?.user?.id);
+  renderResultados(filtrados);
 }
 
 busca.addEventListener("input", () => {
@@ -237,10 +242,27 @@ busca.addEventListener("input", () => {
   buscaTimer = setTimeout(() => carregarUsuariosBusca(termo), 200);
 });
 
-function irPasso(quem) {
-  passoQuem.hidden = !quem;
-  passoValor.hidden = quem;
-  transfTitulo.textContent = quem ? "Para quem transferir?" : "Valor da transferência";
+const transfConfig = document.querySelector("#transf-config");
+const transfVazio = document.querySelector("#transf-vazio");
+const modalTransfEl = document.querySelector(".modal-transf");
+const STEP = 10;
+
+document.querySelector("#transf-voltar")?.addEventListener("click", () => {
+  modalTransfEl.classList.remove("mostrando-config");
+});
+
+function clampValor(v) {
+  v = parseInt(v, 10);
+  if (isNaN(v) || v < 1) v = 1;
+  if (saldoAtual > 0 && v > saldoAtual) v = saldoAtual;
+  return v;
+}
+
+function atualizarBotaoValor() {
+  const btn = document.querySelector("#btn-confirmar-transf");
+  if (!btn) return;
+  const v = parseInt(valorInput.value, 10) || 0;
+  btn.innerHTML = `<i class="ph-fill ph-paper-plane-tilt"></i> Transferir ${v} CRC`;
 }
 
 function resetTransfer() {
@@ -250,7 +272,10 @@ function resetTransfer() {
   busca.value = "";
   transfAviso.textContent = "";
   transfAviso.classList.remove("erro");
-  irPasso(true);
+  transfConfig.hidden = true;
+  transfVazio.hidden = false;
+  modalTransfEl.classList.remove("mostrando-config");
+  resultados.querySelectorAll(".resultado-item").forEach((li) => li.classList.remove("selecionado"));
 }
 
 function selecionar(id, nome, username) {
@@ -258,15 +283,28 @@ function selecionar(id, nome, username) {
   destContato = { id, nome, username: username || null };
   destinatarioNome.textContent = nome;
   destAvatar.textContent = (nome || "?").trim().charAt(0).toUpperCase();
-  irPasso(false);
-  setTimeout(() => document.querySelector("#valor").focus(), 50);
+  document.querySelector("#dest-username").textContent = username ? "@" + username : "";
+  document.querySelector("#transf-saldo-disp").textContent = saldoAtual + " CRC";
+  transfVazio.hidden = true;
+  transfConfig.hidden = false;
+  modalTransfEl.classList.add("mostrando-config");
+
+  resultados.querySelectorAll(".resultado-item").forEach((li) =>
+    li.classList.toggle("selecionado", li.dataset.id === id)
+  );
+
+  if (!valorInput.value || parseInt(valorInput.value, 10) < 1) valorInput.value = "100";
+  atualizarBotaoValor();
+  setTimeout(() => valorInput.focus(), 50);
 }
 
-document.querySelector("#trocar").addEventListener("click", () => {
-  transfAviso.textContent = "";
-  transfAviso.classList.remove("erro");
-  irPasso(true);
-  carregarUsuariosBusca("");
+document.querySelector("#valor-menos").addEventListener("click", () => {
+  valorInput.value = clampValor((parseInt(valorInput.value, 10) || 0) - STEP);
+  atualizarBotaoValor();
+});
+document.querySelector("#valor-mais").addEventListener("click", () => {
+  valorInput.value = clampValor((parseInt(valorInput.value, 10) || 0) + STEP);
+  atualizarBotaoValor();
 });
 
 transfForm.addEventListener("submit", async (e) => {
@@ -274,8 +312,12 @@ transfForm.addEventListener("submit", async (e) => {
   transfAviso.textContent = "";
   transfAviso.classList.remove("erro");
 
-  const valor = parseInt(document.querySelector("#valor").value, 10);
+  const valor = parseInt(valorInput.value, 10);
   const mensagem = document.querySelector("#mensagem").value.trim() || null;
+
+  if (!destinatario) return mostrarErroTransf("Selecione um colaborador.");
+  if (!valor || valor < 1) return mostrarErroTransf("Informe um valor válido.");
+  if (valor > saldoAtual) return mostrarErroTransf("Saldo insuficiente.");
 
   const btn = document.querySelector("#btn-confirmar-transf");
   const btnTexto = btn.innerHTML;
@@ -298,12 +340,12 @@ transfForm.addEventListener("submit", async (e) => {
   }
 
   tocarMoeda();
-  salvarRecente(destContato);
   modalTransf.hidden = true;
   resetTransfer();
   carregarSaldo();
   carregarResumo();
   carregarExtrato();
+  renderRecentesCarteira();
 });
 
 const modalTransf = document.querySelector("#modal-transferir");

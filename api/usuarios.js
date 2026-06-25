@@ -11,6 +11,23 @@ export default async function handler(req, res) {
   }
 
   if (req.method === "GET") {
+    const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
+
+    if (url.searchParams.get("pendentes") === "1") {
+      const { data: wl } = await admin
+        .from("whitelist")
+        .select("email, nome, criado_em")
+        .eq("ativo", true)
+        .order("criado_em", { ascending: false });
+      const { data: feitos } = await admin
+        .from("usuarios")
+        .select("email")
+        .eq("primeiro_acesso_concluido", true);
+      const concluidos = new Set((feitos || []).map((u) => (u.email || "").toLowerCase()));
+      const pendentes = (wl || []).filter((w) => !concluidos.has((w.email || "").toLowerCase()));
+      return res.status(200).json(pendentes);
+    }
+
     const { data, error } = await admin
       .from("usuarios")
       .select(`

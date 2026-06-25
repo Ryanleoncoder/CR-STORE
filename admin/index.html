@@ -85,7 +85,7 @@
         <section class="sec" data-sec="acessos" hidden>
           <h1>Acessos</h1>
           <div class="bloco">
-            <h2>Autorizar e-mail (whitelist)</h2>
+            <h2>Autorizar e-mail (allowlist)</h2>
             <form id="form-whitelist" style="display: flex; flex-direction: column; gap: 16px;">
               <div class="field">
                 <label for="wl-email">E-mail</label>
@@ -95,7 +95,7 @@
                 <label for="wl-nome">Nome (opcional)</label>
                 <input id="wl-nome" placeholder="Nome do usuário" />
               </div>
-              <button type="submit" style="margin-top: 8px; align-self: flex-start;">Adicionar à whitelist</button>
+              <button type="submit" style="margin-top: 8px; align-self: flex-start;">Adicionar à allowlist</button>
             </form>
             <p id="wl-aviso" class="aviso"></p>
           </div>
@@ -110,6 +110,12 @@
               </label>
             </div>
             <p id="wl-csv-aviso" class="aviso"></p>
+          </div>
+
+          <div class="bloco" style="margin-top: 24px;">
+            <h2>Pendentes de cadastro</h2>
+            <p class="help-msg" style="margin-bottom: 16px;">Autorizados na allowlist que ainda <b>não criaram a conta</b>.</p>
+            <ul id="pendentes-lista" class="usuarios-lista"></ul>
           </div>
         </section>
 

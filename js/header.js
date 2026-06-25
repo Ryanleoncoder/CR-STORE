@@ -34,24 +34,46 @@ export async function montarHeader(ativo) {
       </div>
       <span class="coins" id="coins">${COIN_SVG} …</span>
       <div class="user-wrapper">
-        <button id="user-btn" class="user-chip" title="Seu usuário">
-          <i class="ph-fill ph-user-circle"></i>
-          <span id="user-handle">@…</span>
+        <button id="user-btn" class="user-chip" title="Sua conta">
+          <span class="user-av" id="user-av">?</span>
+          <span id="user-handle">…</span>
         </button>
-        <div id="user-dropdown" class="notif-dropdown user-dropdown" hidden>
-          <div class="user-card">
-            <strong id="user-nome">—</strong>
-            <span id="user-handle-full" class="sub"></span>
-            <button id="user-copiar" class="link"><i class="ph-fill ph-copy"></i> Copiar usuário</button>
+        <div id="user-dropdown" class="notif-dropdown account-menu" hidden>
+          <div class="account-cover"></div>
+          <div class="account-head">
+            <span class="user-av lg" id="user-av-lg">?</span>
+            <div class="account-id">
+              <strong id="user-nome">—</strong>
+              <div class="account-handle-row">
+                <span id="user-handle-full" class="sub"></span>
+                <button id="user-copiar" class="copiar-mini" type="button" title="Copiar usuário"><i class="ph-fill ph-copy"></i></button>
+              </div>
+            </div>
+          </div>
+          <div class="account-body">
+            <button class="account-item" type="button" disabled><i class="ph-fill ph-user"></i> Perfil <span class="em-breve-tag">Em breve</span></button>
+            <button class="account-item" type="button" disabled><i class="ph-fill ph-gear-six"></i> Configurações <span class="em-breve-tag">Em breve</span></button>
+            <div class="account-sep"></div>
+            <button id="sair" class="account-item account-sair" type="button"><i class="ph-fill ph-sign-out"></i> Sair</button>
           </div>
         </div>
       </div>
-      <button id="sair" class="link">Sair</button>
     </div>`;
 
   document.querySelector("#sair").addEventListener("click", logout);
 
-  // Admin é assíncrono (depende de cargos) — entra depois, sem segurar o header.
+  try {
+    const c = JSON.parse(localStorage.getItem("cr_perfil") || "null");
+    if (c) {
+      const n = c.nome || "Você";
+      document.querySelector("#user-handle").textContent = n;
+      document.querySelector("#user-av").textContent = (n || c.username || "?")
+        .trim()
+        .charAt(0)
+        .toUpperCase();
+    }
+  } catch {}
+
   const { data: cargos } = await supabase
     .from("usuario_cargos")
     .select("cargos!inner(codigo)")
@@ -99,9 +121,6 @@ export async function montarHeader(ativo) {
     if (bnBadge) bnBadge.hidden = hidden;
   }
 
-  const CLEARED_KEY = "cr_notif_cleared";
-  const SEEN_KEY = "cr_notif_seen";
-
   function infoNotif(t) {
     if (t.tipo === "transferencia_recebida") {
       return {
@@ -121,6 +140,8 @@ export async function montarHeader(ativo) {
     };
   }
 
+  const SEEN_KEY = "cr_notif_seen";
+
   async function carregarNotificacoes() {
     notifLista.innerHTML = Array(3).fill(0).map(() => `
       <li class="notif-item skeleton-row" style="border: none; padding: 10px 12px; gap: 8px;">
@@ -132,14 +153,31 @@ export async function montarHeader(ativo) {
       </li>
     `).join("");
 
-    const cleared = localStorage.getItem(CLEARED_KEY);
+    let limpoEm = null;
+    try {
+      const { data: perfil } = await supabase
+        .from("usuarios")
+        .select("notif_limpo_em")
+        .eq("id", (await supabase.auth.getUser()).data.user?.id)
+        .maybeSingle();
+      limpoEm = perfil?.notif_limpo_em ?? null;
+    } catch {}
+
+    const limpoLocal = localStorage.getItem("cr_notif_cleared");
+    if (limpoLocal && (!limpoEm || limpoLocal > limpoEm)) {
+      limpoEm = limpoLocal;
+    }
+
     let query = supabase
       .from("transacoes_carteira")
       .select("id, tipo, valor, descricao, criado_em")
       .in("tipo", ["transferencia_recebida", "ajuste_admin", "resgate_codigo"])
       .order("criado_em", { ascending: false })
-      .limit(15);
-    if (cleared) query = query.gt("criado_em", cleared);
+      .limit(10);
+
+    if (limpoEm) {
+      query = query.gt("criado_em", limpoEm);
+    }
 
     const { data: transacoes } = await query;
 
@@ -151,7 +189,8 @@ export async function montarHeader(ativo) {
 
     const newest = transacoes[0].criado_em;
     const seen = localStorage.getItem(SEEN_KEY);
-    setNotifBadge(!!(seen && new Date(seen) >= new Date(newest)));
+    const jáViu = seen && new Date(seen) >= new Date(newest);
+    setNotifBadge(!!jáViu);
 
     notifLista.innerHTML = transacoes
       .map((t) => {
@@ -174,7 +213,7 @@ export async function montarHeader(ativo) {
       .join("");
   }
 
-  await carregarNotificacoes();
+  try { await carregarNotificacoes(); } catch {}
 
   supabase
     .channel("carteira-rt")
@@ -193,6 +232,8 @@ export async function montarHeader(ativo) {
 
   function alternarNotif(e) {
     e.stopPropagation();
+    const ud = document.querySelector("#user-dropdown");
+    if (ud) ud.hidden = true; 
     const isHidden = notifDropdown.hidden;
     notifDropdown.hidden = !isHidden;
     if (!isHidden) return;
@@ -211,18 +252,56 @@ export async function montarHeader(ativo) {
   }
 
   if (notifLimpar) {
-    notifLimpar.addEventListener("click", () => {
+    notifLimpar.addEventListener("click", async () => {
+    
       const agora = new Date().toISOString();
-      localStorage.setItem(CLEARED_KEY, agora);
-      localStorage.setItem(SEEN_KEY, agora);
       notifLista.innerHTML = `<li class="vazio">Nenhuma notificação recente.</li>`;
       setNotifBadge(true);
+      localStorage.setItem(SEEN_KEY, agora);
+      localStorage.setItem("cr_notif_cleared", agora);
+
+      try {
+        const { getAccessToken } = await import("./auth-token.js");
+        const token = await getAccessToken();
+        if (token) {
+          await fetch("/api/notificacoes", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        }
+      } catch {}
     });
   }
 
   async function montarUsuario() {
     const userBtn = document.querySelector("#user-btn");
     const userDropdown = document.querySelector("#user-dropdown");
+    const PERFIL_KEY = "cr_perfil";
+
+    function aplicarPerfil(nome, username) {
+      const n = nome || "Você";
+      document.querySelector("#user-handle").textContent = n;
+      document.querySelector("#user-nome").textContent = n;
+      document.querySelector("#user-handle-full").textContent = username
+        ? `@${username}`
+        : "Sem nome de usuário";
+      const inicial = (n || username || "?").trim().charAt(0).toUpperCase();
+      document.querySelector("#user-av").textContent = inicial;
+      document.querySelector("#user-av-lg").textContent = inicial;
+    }
+
+    try {
+      const c = JSON.parse(localStorage.getItem(PERFIL_KEY) || "null");
+      if (c) aplicarPerfil(c.nome, c.username);
+    } catch {}
+
+    userBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      notifDropdown.hidden = true; // só um dropdown aberto por vez
+      userDropdown.hidden = !userDropdown.hidden;
+    });
+    userDropdown.addEventListener("click", (e) => e.stopPropagation());
+    document.addEventListener("click", () => (userDropdown.hidden = true));
 
     const { data: perfil } = await supabase
       .from("usuarios")
@@ -231,19 +310,10 @@ export async function montarHeader(ativo) {
 
     const username = perfil?.username || null;
     const nome = perfil?.nome || "Você";
-
-    document.querySelector("#user-handle").textContent = nome;
-    document.querySelector("#user-nome").textContent = nome;
-    document.querySelector("#user-handle-full").textContent = username
-      ? `@${username}`
-      : "Sem nome de usuário";
-
-    userBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      userDropdown.hidden = !userDropdown.hidden;
-    });
-    userDropdown.addEventListener("click", (e) => e.stopPropagation());
-    document.addEventListener("click", () => (userDropdown.hidden = true));
+    aplicarPerfil(nome, username);
+    try {
+      localStorage.setItem(PERFIL_KEY, JSON.stringify({ nome, username }));
+    } catch {}
 
     const copiar = document.querySelector("#user-copiar");
     copiar.hidden = !username;
@@ -252,8 +322,12 @@ export async function montarHeader(ativo) {
       try {
         await navigator.clipboard.writeText(username);
         const original = copiar.innerHTML;
-        copiar.innerHTML = '<i class="ph-fill ph-check"></i> Copiado!';
-        setTimeout(() => (copiar.innerHTML = original), 1200);
+        copiar.innerHTML = '<i class="ph-fill ph-check"></i>';
+        copiar.title = "Copiado!";
+        setTimeout(() => {
+          copiar.innerHTML = original;
+          copiar.title = "Copiar usuário";
+        }, 1200);
       } catch {}
     });
   }

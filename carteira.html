@@ -53,6 +53,11 @@
         </div>
       </section>
 
+      <section class="bloco" id="recentes-bloco" hidden>
+        <h2>Contatos recentes</h2>
+        <ul id="recentes-carteira" class="recentes-row"></ul>
+      </section>
+
       <section class="bloco">
         <h2 id="titulo-extrato">Extrato</h2>
         <ul id="extrato" class="extrato"></ul>
@@ -61,45 +66,55 @@
 
     <!-- Modal de Transferência (estilo Pix, em passos) -->
     <div id="modal-transferir" class="modal-bg" hidden>
-      <div class="modal">
-        <div class="modal-head">
-          <h3 id="transf-titulo">Para quem transferir?</h3>
-          <button class="modal-close" id="btn-fechar-modal">✕</button>
-        </div>
-        <div class="modal-body">
-          <!-- Passo 1: destinatário -->
-          <div id="transf-passo-quem">
+      <div class="modal modal-transf">
+        <button class="modal-close" id="btn-fechar-modal">✕</button>
+        <div class="transf-grid">
+          <!-- Esquerda: escolher pessoa -->
+          <div class="transf-left">
+            <h3 class="transf-titulo-lg">Transferir <span class="hl-crc">CRCoins</span></h3>
+            <p class="transf-sub">Escolha um colaborador para receber suas moedas.</p>
             <div class="search-pill-inline">
               <span><i class="ph-fill ph-magnifying-glass"></i></span>
-              <input id="busca" placeholder="Buscar por nome, @usuário ou e-mail" autocomplete="off" />
+              <input id="busca" placeholder="Buscar por nome ou @usuário..." autocomplete="off" />
             </div>
-            <p class="transf-hint">Contatos</p>
+            <p class="transf-hint">Usuários</p>
             <ul id="resultados" class="resultados"></ul>
           </div>
 
-          <!-- Passo 2: valor + confirmação -->
-          <div id="transf-passo-valor" hidden>
-            <button type="button" id="trocar" class="transf-dest">
-              <span class="transf-dest-av" id="dest-avatar">?</span>
-              <span class="transf-dest-info">
-                <strong id="destinatario-nome"></strong>
-                <small>Trocar destinatário</small>
-              </span>
-              <span class="transf-dest-arrow">↺</span>
-            </button>
+          <!-- Direita: configurar -->
+          <div class="transf-right">
+            <div id="transf-vazio" class="transf-vazio">
+              <i class="ph-fill ph-user-circle-plus"></i>
+              <p>Selecione um colaborador ao lado para transferir.</p>
+            </div>
 
-            <form id="transf-form">
-              <label class="transf-valor-label">Quanto você quer enviar?</label>
-              <div class="transf-valor-wrap">
-                <img src="/assets/images/crcoins.webp" class="coin-token" alt="CRC" />
-                <input id="valor" type="number" min="1" placeholder="0" required />
-              </div>
-              <input id="mensagem" maxlength="140" placeholder="Mensagem (opcional)" />
-              <button type="submit" id="btn-confirmar-transf">Transferir</button>
-            </form>
+            <div id="transf-config" hidden>
+              <button type="button" id="transf-voltar" class="voltar-transf"><i class="ph-fill ph-arrow-left"></i> Voltar</button>
+              <div class="transf-coin-badge"><img src="/assets/images/crcoins.webp" alt="" /></div>
+              <p class="transf-para">Transferência para</p>
+              <span class="transf-dest-av lg" id="dest-avatar">?</span>
+              <strong id="destinatario-nome"></strong>
+              <span id="dest-username" class="sub"></span>
+              <hr class="transf-divider" />
+              <form id="transf-form">
+                <label>Quantidade de CRCoins</label>
+                <div class="transf-stepper">
+                  <button type="button" id="valor-menos" aria-label="Diminuir">−</button>
+                  <div class="transf-stepper-mid">
+                    <img src="/assets/images/crcoins.webp" class="coin-token" alt="" />
+                    <input id="valor" type="text" inputmode="numeric" value="100" />
+                  </div>
+                  <button type="button" id="valor-mais" aria-label="Aumentar">+</button>
+                </div>
+                <p class="transf-saldo">Saldo disponível: <b id="transf-saldo-disp">—</b></p>
+                <label for="mensagem">Mensagem (opcional)</label>
+                <textarea id="mensagem" maxlength="120" placeholder="Escreva uma mensagem..."></textarea>
+                <p id="transf-aviso" class="aviso"></p>
+                <button type="submit" id="btn-confirmar-transf"><i class="ph-fill ph-paper-plane-tilt"></i> Transferir</button>
+                <p class="transf-final">Esta ação não pode ser desfeita.</p>
+              </form>
+            </div>
           </div>
-
-          <p id="transf-aviso" class="aviso"></p>
         </div>
       </div>
     </div>

@@ -25,5 +25,8 @@ export async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
   } catch {}
   clearAccessToken();
+  try {
+    localStorage.removeItem("cr_perfil");
+  } catch {}
   window.location.href = "/";
 }

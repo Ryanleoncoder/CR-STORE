@@ -20,6 +20,9 @@ document.querySelectorAll(".sidebar-nav [data-sec]").forEach((btn) =>
     if (btn.dataset.sec === "pedidos") {
       carregarPedidos();
     }
+    if (btn.dataset.sec === "acessos") {
+      carregarPendentes();
+    }
   })
 );
 
@@ -241,7 +244,7 @@ async function ajustar(usuarioId) {
 }
 
 async function desativar(usuarioId) {
-  if (!confirm("Desativar este usuário e tirá-lo da whitelist?")) return;
+  if (!confirm("Desativar este usuário e tirá-lo da allowlist?")) return;
 
   const res = await fetch("/api/usuarios", {
     method: "DELETE",
@@ -282,7 +285,32 @@ wlForm.addEventListener("submit", async (e) => {
 
   wlForm.reset();
   wlAviso.textContent = "E-mail autorizado!";
+  carregarPendentes();
 });
+
+async function carregarPendentes() {
+  const ul = document.querySelector("#pendentes-lista");
+  if (!ul) return;
+  ul.innerHTML = "<li class='vazio'>Carregando…</li>";
+  const res = await fetch("/api/usuarios?pendentes=1", { headers: await authHeaders() });
+  const data = await res.json().catch(() => []);
+  if (!res.ok || !Array.isArray(data) || data.length === 0) {
+    ul.innerHTML = "<li class='vazio'>Ninguém pendente — todos já criaram a conta. 🎉</li>";
+    return;
+  }
+  ul.innerHTML = data
+    .map(
+      (p) => `
+      <li class="usuario">
+        <div class="usuario-info">
+          <strong>${p.nome || p.email}</strong>
+          <span>${p.email}</span>
+        </div>
+        <span class="badge-pendente" style="font-size:11px;padding:4px 10px;border-radius:9999px;font-weight:700;">Pendente</span>
+      </li>`
+    )
+    .join("");
+}
 
 const wlCsv = document.querySelector("#wl-csv");
 const wlCsvAviso = document.querySelector("#wl-csv-aviso");
@@ -352,6 +380,7 @@ if (wlCsv) {
         wlCsvAviso.textContent = `Importação concluída com sucesso! ${emails.length} e-mails autorizados.`;
         wlCsvAviso.classList.add("sucesso");
         wlCsv.value = ""; // Reset input
+        carregarPendentes();
       } catch (err) {
         wlCsvAviso.textContent = err.message;
         wlCsvAviso.classList.add("erro");
