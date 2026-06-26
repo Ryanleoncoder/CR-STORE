@@ -318,13 +318,13 @@ export async function montarHeader(ativo) {
 
     userBtn.addEventListener("click", (e) => {
       e.stopPropagation();
-      notifDropdown.hidden = true; // só um dropdown aberto por vez
+      notifDropdown.hidden = true; 
       userDropdown.hidden = !userDropdown.hidden;
     });
     userDropdown.addEventListener("click", (e) => e.stopPropagation());
     document.addEventListener("click", () => (userDropdown.hidden = true));
 
-    // Busca o perfil atualizado e renova o cache em segundo plano.
+
     const { data: perfil } = await supabase
       .from("usuarios")
       .select("nome, username, avatar_url")
@@ -335,7 +335,7 @@ export async function montarHeader(ativo) {
       const nome = perfil.nome || "Você";
       const db_avatar_url = perfil.avatar_url || null;
 
-      // Lê o cache atual
+
       let cached = null;
       try {
         cached = JSON.parse(localStorage.getItem(PERFIL_KEY) || "null");
@@ -422,7 +422,7 @@ export async function montarHeader(ativo) {
                   <div class="field">
                     <label for="avatar-skin">Cor da Pele</label>
                     <select id="avatar-skin">
-                      <option value="efb18a">Padrão</option>
+                      <option value="efb18a">clara 0</option>
                       <option value="f5c9a6">Clara 1</option>
                       <option value="ffdcb3">Clara 2</option>
                       <option value="e49f7a">Média 1</option>
