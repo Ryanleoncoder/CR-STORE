@@ -1,5 +1,10 @@
 import { requireAdmin } from "../lib/supabaseAdmin.js";
 
+async function definirBanimento(admin, usuarioId, banir) {
+  await admin.auth.admin.updateUserById(usuarioId, {
+    ban_duration: banir ? "876000h" : "none",
+  });
+}
 
 export default async function handler(req, res) {
   const auth = await requireAdmin(req);
@@ -16,7 +21,7 @@ export default async function handler(req, res) {
     if (url.searchParams.get("pendentes") === "1") {
       const { data: wl } = await admin
         .from("whitelist")
-        .select("email, nome, criado_em")
+        .select("email, nome, criado_em, expira_em")
         .eq("ativo", true)
         .order("criado_em", { ascending: false });
       const { data: feitos } = await admin
@@ -42,6 +47,8 @@ export default async function handler(req, res) {
   }
 
   if (req.method === "POST") {
+    const expira_em = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString();
+
     const emails = req.body?.emails;
     if (Array.isArray(emails)) {
       const insertData = emails
@@ -49,6 +56,7 @@ export default async function handler(req, res) {
           email: (x.email || "").trim().toLowerCase(),
           nome: x.nome ? x.nome.trim() : null,
           ativo: true,
+          expira_em,
         }))
         .filter((x) => x.email);
 
@@ -70,12 +78,22 @@ export default async function handler(req, res) {
 
     const { error } = await admin
       .from("whitelist")
-      .upsert({ email, nome, ativo: true }, { onConflict: "email" });
+      .upsert({ email, nome, ativo: true, expira_em }, { onConflict: "email" });
     if (error) return res.status(500).json({ error: error.message });
     return res.status(201).json({ ok: true });
   }
 
   if (req.method === "DELETE") {
+    const whitelistEmail = (req.body?.whitelist_email || "").trim().toLowerCase();
+    if (whitelistEmail) {
+      const { error } = await admin
+        .from("whitelist")
+        .delete()
+        .ilike("email", whitelistEmail);
+      if (error) return res.status(500).json({ error: error.message });
+      return res.status(200).json({ ok: true });
+    }
+
     const usuarioId = req.body?.usuario_id;
     if (!usuarioId) return res.status(400).json({ error: "Informe o usuario_id" });
     if (usuarioId === auth.user.id) {
@@ -98,6 +116,8 @@ export default async function handler(req, res) {
       await admin.from("whitelist").update({ ativo: false }).eq("email", u.email);
     }
 
+    await definirBanimento(admin, usuarioId, true);
+
     return res.status(200).json({ ok: true });
   }
 
@@ -118,12 +138,14 @@ export default async function handler(req, res) {
         .from("usuarios")
         .update({ ativo })
         .eq("id", usuario_id);
-      
+
       if (error) return res.status(500).json({ error: error.message });
 
       if (u?.email) {
         await admin.from("whitelist").update({ ativo }).eq("email", u.email);
       }
+
+      await definirBanimento(admin, usuario_id, ativo === false);
     }
 
     if (cargo_codigo) {
@@ -138,7 +160,6 @@ export default async function handler(req, res) {
         .maybeSingle();
       if (!cargo) return res.status(400).json({ error: "Cargo inválido" });
 
-      // Substitui o cargo do usuário pelo escolhido (cargo único por usuário)
       await admin.from("usuario_cargos").delete().eq("usuario_id", usuario_id);
       const { error } = await admin
         .from("usuario_cargos")

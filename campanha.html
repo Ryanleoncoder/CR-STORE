@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Campanha · CR Store</title>
+    <link rel="icon" type="image/webp" href="/assets/images/crcoins.webp" />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <header id="topo"></header>
+
+    <main class="conteudo">
+      <div class="campanha-topo-acoes">
+        <a href="/desafios" class="btn-voltar">
+          <i class="ph-fill ph-caret-left"></i>
+          Voltar para Desafios
+        </a>
+      </div>
+      <p id="aviso" class="aviso"></p>
+
+      <div id="campanha-hero"></div>
+
+      <div class="desafios-layout">
+        <div>
+          <h2 style="margin-bottom: 16px;">Desafios</h2>
+          <div id="desafios-grid" class="desafios-grid"></div>
+        </div>
+
+        <aside>
+          <div class="ranking-card">
+            <h2><i class="ph-fill ph-trophy" style="color: #f7c600;"></i> Ranking</h2>
+            <ul id="ranking-campanha" class="ranking-lista"></ul>
+          </div>
+        </aside>
+      </div>
+
+      <div id="quiz-root"></div>
+    </main>
+
+    <script type="module" src="js/campanha.js"></script>
+  </body>
+</html>

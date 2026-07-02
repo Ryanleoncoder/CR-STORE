@@ -10,12 +10,61 @@
   <body>
     <header id="topo"></header>
 
-    <main class="conteudo">
-      <section class="em-construcao">
-        <img src="/assets/images/worker/worker.webp" alt="" class="em-construcao-img" />
-        <h1>Desafios</h1>
-        <p>Estamos construindo este espaço. Volte em breve.</p>
-      </section>
+    <main class="conteudo conteudo-desafios">
+      <div class="mobile-toggle-container">
+        <button type="button" class="mobile-toggle-btn active" data-target="campanhas">Campanhas</button>
+        <button type="button" class="mobile-toggle-btn" data-target="ranking">Ranking de XP</button>
+      </div>
+
+      <div class="desafios-layout show-campanhas">
+        <div id="campanhas-col">
+          <div id="campanhas-lista" class="campanhas-grid"></div>
+        </div>
+
+        <aside id="ranking-col">
+          <div class="ranking-dashboard-header">
+            <h2 class="ranking-dashboard-title">
+              <i class="ph-fill ph-trophy trophy-icon"></i> Ranking de XP
+            </h2>
+            <p class="ranking-dashboard-sub">Veja os jogadores que estão dominando os desafios!</p>
+            
+            <div class="leaderboard-tabs-pill dashboard-tabs">
+              <button type="button" class="tab-btn active" data-tab="monthly">Mensal</button>
+              <button type="button" class="tab-btn" data-tab="weekly">Semanal</button>
+              <button type="button" class="tab-btn" data-tab="today">Hoje</button>
+              <button type="button" class="tab-btn" data-tab="all-time">Geral</button>
+            </div>
+          </div>
+
+          <div class="ranking-dashboard-wrapper">
+            <div class="ranking-main-pane">
+              <div class="leaderboard-podium-card">
+                <div class="podium-card-glow"></div>
+                <div class="leaderboard-podium" id="leaderboard-podium-container">
+                </div>
+              </div>
+              
+              <div class="leaderboard-table-card">
+                <table class="leaderboard-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 12%; padding-left: 20px;">Posição</th>
+                      <th style="width: 38%;">Jogador</th>
+                      <th style="width: 25%; text-align: right;">XP Total</th>
+                      <th style="width: 25%; text-align: left; padding-left: 24px;">Progresso até o Líder</th>
+                    </tr>
+                  </thead>
+                  <tbody id="ranking-geral-table-body">
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="ranking-side-pane" id="seu-desempenho-container">
+            </div>
+          </div>
+        </aside>
+      </div>
     </main>
 
     <script type="module" src="js/desafios.js"></script>

@@ -70,6 +70,7 @@ async function carregarResumo() {
 async function carregarExtrato() {
   extratoEl.innerHTML = Array(4).fill(0).map(() => `
     <li class="skeleton-row" style="border: none; padding: 12px 0;">
+      <div class="skeleton" style="width: 40px; height: 40px; border-radius: 50%; flex: 0 0 40px;"></div>
       <div class="skeleton-text">
         <div class="skeleton skeleton-line1" style="width: 45%; height: 14px;"></div>
         <div class="skeleton skeleton-line2" style="width: 65%; height: 10px; margin-top: 6px;"></div>
@@ -80,7 +81,7 @@ async function carregarExtrato() {
 
   const { data } = await supabase
     .from("transacoes_carteira")
-    .select("id, tipo, valor, descricao, criado_em")
+    .select("id, tipo, valor, descricao, criado_em, referencia_id")
     .order("criado_em", { ascending: false })
     .limit(6);
 
@@ -89,19 +90,10 @@ async function carregarExtrato() {
     return;
   }
 
+  const contras = await mapaContrapartes(data);
   extratoEl.innerHTML =
     data
-      .map((t) => {
-        const s = sinalDe(t);
-        return `
-      <li>
-        <div>
-          <strong>${rotulo(t.tipo)}</strong>
-          <span>${t.descricao ?? "—"} · ${formatarData(t.criado_em)}</span>
-        </div>
-        <b class="${s.cls}">${s.txt}${s.abs}</b>
-      </li>`;
-      })
+      .map((t) => linhaExtrato(t, contras[t.referencia_id]))
       .join("") +
     `<li class="extrato-vertudo"><button type="button" id="btn-ver-tudo" class="link">Ver extrato completo →</button></li>`;
 
@@ -143,6 +135,93 @@ function ehSaida(t) {
 function sinalDe(t) {
   const saida = ehSaida(t);
   return { cls: saida ? "saida" : "entrada", txt: saida ? "−" : "+", abs: Math.abs(t.valor) };
+}
+
+function iconeDe(tipo) {
+  const mapa = {
+    transferencia_enviada: { icon: "ph-paper-plane-tilt", bg: "#ede7f6", color: "#673ab7" },
+    transferencia_recebida: { icon: "ph-user", bg: "#e8f5e9", color: "var(--pos)" },
+    compra_loja: { icon: "ph-shopping-cart", bg: "#fde3cf", color: "#d96b27" },
+    credito: { icon: "ph-plus", bg: "#e8f5e9", color: "var(--pos)" },
+    debito: { icon: "ph-minus", bg: "#fdecea", color: "var(--neg)" },
+    resgate_codigo: { icon: "ph-ticket", bg: "#fff4dc", color: "#b9820a" },
+    ajuste_admin: { icon: "ph-sliders-horizontal", bg: "#ede7f6", color: "#673ab7" },
+  };
+  return mapa[tipo] ?? { icon: "ph-circle", bg: "#eee", color: "var(--muted)" };
+}
+
+
+async function mapaContrapartes(txs) {
+  const papelPorRef = {};
+  for (const t of txs) {
+    if (
+      (t.tipo === "transferencia_enviada" || t.tipo === "transferencia_recebida") &&
+      t.referencia_id
+    ) {
+      papelPorRef[t.referencia_id] = t.tipo;
+    }
+  }
+  const refs = Object.keys(papelPorRef);
+  if (refs.length === 0) return {};
+
+  const { data: transfs } = await supabase
+    .from("transferencias_pontos")
+    .select("id, remetente_id, destinatario_id")
+    .in("id", refs);
+  if (!transfs || transfs.length === 0) return {};
+
+  const contraPorRef = {};
+  const userIds = new Set();
+  for (const tr of transfs) {
+    const uid =
+      papelPorRef[tr.id] === "transferencia_enviada" ? tr.destinatario_id : tr.remetente_id;
+    if (uid) {
+      contraPorRef[tr.id] = uid;
+      userIds.add(uid);
+    }
+  }
+  if (userIds.size === 0) return {};
+
+  const { data: users } = await supabase
+    .from("usuarios")
+    .select("id, nome, avatar_url")
+    .in("id", [...userIds]);
+  const userPorId = {};
+  for (const u of users || []) userPorId[u.id] = u;
+
+  const out = {};
+  for (const [ref, uid] of Object.entries(contraPorRef)) {
+    if (userPorId[uid]) out[ref] = userPorId[uid];
+  }
+  return out;
+}
+
+function linhaExtrato(t, contra) {
+  const s = sinalDe(t);
+  let icoHtml;
+  let sub = `${t.descricao ?? "—"} · ${formatarData(t.criado_em)}`;
+
+  if (contra) {
+    const nome = contra.nome || "Usuário";
+    const preposicao = t.tipo === "transferencia_recebida" ? "de" : "para";
+    sub = `${preposicao} ${nome} · ${formatarData(t.criado_em)}`;
+    icoHtml = contra.avatar_url
+      ? `<span class="extrato-ico"><img src="${contra.avatar_url}" alt="${nome}" /></span>`
+      : `<span class="extrato-ico extrato-ico-inicial">${nome.trim().charAt(0).toUpperCase()}</span>`;
+  } else {
+    const ic = iconeDe(t.tipo);
+    icoHtml = `<span class="extrato-ico" style="background:${ic.bg}; color:${ic.color};"><i class="ph-fill ${ic.icon}"></i></span>`;
+  }
+
+  return `
+      <li>
+        ${icoHtml}
+        <div class="extrato-info">
+          <strong>${rotulo(t.tipo)}</strong>
+          <span>${sub}</span>
+        </div>
+        <b class="${s.cls}">${s.txt}${s.abs}</b>
+      </li>`;
 }
 
 const transfHint = document.querySelector(".transf-hint");
@@ -421,6 +500,7 @@ let extratoCompleto = [];
 async function carregarExtratoDetalhado(filtro = "todos") {
   extratoDetalhadoLista.innerHTML = Array(5).fill(0).map(() => `
     <li class="skeleton-row" style="border: none; padding: 12px 0;">
+      <div class="skeleton" style="width: 40px; height: 40px; border-radius: 50%; flex: 0 0 40px;"></div>
       <div class="skeleton-text">
         <div class="skeleton skeleton-line1" style="width: 45%; height: 14px;"></div>
         <div class="skeleton skeleton-line2" style="width: 65%; height: 10px; margin-top: 6px;"></div>
@@ -432,7 +512,7 @@ async function carregarExtratoDetalhado(filtro = "todos") {
   if (extratoCompleto.length === 0) {
     const { data } = await supabase
       .from("transacoes_carteira")
-      .select("id, tipo, valor, descricao, criado_em")
+      .select("id, tipo, valor, descricao, criado_em, referencia_id")
       .order("criado_em", { ascending: false })
       .limit(100);
     extratoCompleto = data || [];
@@ -450,18 +530,9 @@ async function carregarExtratoDetalhado(filtro = "todos") {
     return;
   }
 
+  const contras = await mapaContrapartes(filtrado);
   extratoDetalhadoLista.innerHTML = filtrado
-    .map((t) => {
-      const s = sinalDe(t);
-      return `
-      <li style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border);">
-        <div>
-          <strong style="display: block; font-size: 14px; font-weight: 600;">${rotulo(t.tipo)}</strong>
-          <span style="font-size: 12px; color: var(--muted);">${t.descricao ?? "—"} · ${formatarData(t.criado_em)}</span>
-        </div>
-        <b class="${s.cls}" style="font-size: 14px;">${s.txt}${s.abs}</b>
-      </li>`;
-    })
+    .map((t) => linhaExtrato(t, contras[t.referencia_id]))
     .join("");
 }
 

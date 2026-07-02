@@ -1,6 +1,10 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 @import url("https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css");
 
+html {
+  scrollbar-gutter: stable;
+}
+
 :root {
   --orange: #1f1f1f;       
   --orange-deep: #000000;
@@ -662,9 +666,7 @@ button:disabled {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ================================================================
-   SALDO CARD
-   ================================================================ */
+
 .saldo-card {
   background: linear-gradient(135deg, var(--orange) 0%, var(--orange-deep) 100%);
   color: #fff;
@@ -742,9 +744,7 @@ button:disabled {
   opacity: 0.8;
 }
 
-/* ================================================================
-   BLOCOS (seções em card)
-   ================================================================ */
+
 .bloco {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -817,8 +817,8 @@ button:disabled {
 }
 .extrato li {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 12px;
   padding: 14px 0;
   border-bottom: 1px solid var(--border);
   animation: fadeIn 0.25s ease;
@@ -826,7 +826,32 @@ button:disabled {
 .extrato li:last-child {
   border-bottom: none;
 }
-.extrato li div {
+.extrato-ico {
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  overflow: hidden;
+}
+.extrato-ico-inicial {
+  background: #ede7f6;
+  color: #673ab7;
+  font-size: 18px;
+  font-weight: 700;
+}
+.extrato-ico img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.extrato-info {
+  flex: 1 1 auto;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -1249,12 +1274,78 @@ button:disabled {
   position: sticky;
   top: 0;
   height: 100vh;
+  overflow: hidden;
+  transition: width 0.2s ease, padding 0.2s ease;
 }
 
 .sidebar-logo {
   font-size: 22px;
   margin-bottom: 28px;
   padding: 0 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.sidebar-toggle,
+.sidebar-show {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+
+.sidebar-toggle {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  font-size: 18px;
+}
+
+.sidebar-toggle:hover {
+  background: var(--soft);
+  color: var(--ink);
+}
+
+/* Botão flutuante para reabrir (visível só quando recolhida) */
+.sidebar-show {
+  display: none;
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 50;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--ink);
+  font-size: 18px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Estado recolhido */
+.admin-layout.sidebar-collapsed .sidebar {
+  width: 0;
+  min-width: 0;
+  padding-left: 0;
+  padding-right: 0;
+  border-right: none;
+}
+
+.admin-layout.sidebar-collapsed .sidebar-show {
+  display: flex;
+}
+
+.admin-layout.sidebar-collapsed .admin-main {
+  padding-left: 68px;
 }
 
 .sidebar-nav {
@@ -1878,6 +1969,26 @@ body:has(.modal-bg:not([hidden])) {
   background: #fff3cd;
   color: #856404;
   border: 1px solid #ffeeba;
+}
+.badge-pendente.urgente {
+  background: #fde3cf;
+  color: #b9540a;
+  border-color: #f9c69b;
+}
+.badge-pendente.vencido {
+  background: #fdecea;
+  color: var(--neg);
+  border-color: #f5c2bd;
+}
+
+#pendentes-lista .usuario-info {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+#pendentes-lista .badge-pendente {
+  flex: 0 0 auto;
+  min-width: 104px;
+  text-align: center;
 }
 .badge-confirmado {
   background: #d4edda;
@@ -3522,4 +3633,2250 @@ i[class*="ph-"] {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* ==================================================================
+   DESAFIOS — Campanhas, Quiz, Ranking
+   ================================================================== */
+
+/* --- Página de Listagem (desafios.html) --- */
+
+.desafios-hero {
+  text-align: center;
+  margin-bottom: 28px;
+}
+.desafios-hero h1 { margin-bottom: 4px; }
+.desafios-hero .sub { font-size: 15px; }
+
+.desafios-layout {
+  display: block;
+  width: 100%;
+}
+
+/* --- Cards de Campanha --- */
+
+.campanhas-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.campanha-card {
+  background: var(--surface);
+  border-radius: var(--r-card);
+  overflow: hidden;
+  box-shadow: var(--sh);
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+  animation: fadeSlideUp 0.4s ease both;
+}
+.campanha-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--sh2);
+}
+
+.campanha-card-banner {
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+}
+.campanha-card:hover .campanha-card-banner {
+  transform: scale(1.03);
+}
+.campanha-card-banner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.3));
+}
+.campanha-card-banner .camp-emoji {
+  font-size: 48px;
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+}
+
+.campanha-card-body {
+  padding: 16px;
+}
+.campanha-card-body h3 {
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.campanha-card-body p {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 12px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.campanha-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* Barra de progresso */
+.progress-bar-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.progress-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--soft);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.6s cubic-bezier(.22,.61,.36,1);
+  min-width: 0;
+}
+.progress-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* Badge de tempo restante */
+.campanha-tempo-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+  background: #e8f5e9;
+  color: var(--pos);
+  white-space: nowrap;
+}
+.campanha-tempo-badge.urgente {
+  background: #fff3e0;
+  color: #e65100;
+}
+.campanha-tempo-badge.encerrado {
+  background: #fdecea;
+  color: var(--neg);
+}
+
+/* --- Ranking / Leaderboard --- */
+
+/* --- Ranking / Leaderboard (General Styles) --- */
+.ranking-lista {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+}
+
+.ranking-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--ink);
+}
+
+.ranking-pos {
+  font-size: 13px;
+  font-weight: 800;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+  color: var(--muted);
+  background: var(--soft);
+}
+
+.ranking-pos.ouro {
+  background: #fdf2e9;
+  color: #e65100;
+  font-weight: 900;
+}
+
+.ranking-pos.prata {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.ranking-pos.bronze {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.ranking-av {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--border);
+  box-shadow: var(--sh);
+  flex-shrink: 0;
+}
+
+.ranking-av-inicial {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--soft);
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 14px;
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ranking-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ranking-info strong {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ranking-info span {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.ranking-score {
+  font-size: 13px;
+  font-weight: 800;
+  color: #854d0e;
+  background: #fef9c3;
+  padding: 4px 10px;
+  border-radius: 99px;
+  white-space: nowrap;
+}
+
+.ranking-stats-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.rank-stat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+  line-height: 1;
+}
+
+.rank-stat-badge.score {
+  background: rgba(99, 102, 241, 0.1);
+  color: #8b5cf6;
+}
+
+.rank-stat-badge.xp {
+  background: rgba(247, 198, 0, 0.15);
+  color: #f7c600;
+}
+
+.rank-stat-badge.crc {
+  background: rgba(249, 115, 22, 0.1);
+  color: var(--orange);
+}
+
+.rank-stat-badge img,
+.rank-stat-badge i {
+  width: 12px;
+  height: 12px;
+  font-size: 12px;
+  object-fit: contain;
+}
+
+/* --- Ranking / Leaderboard Premium (Black & Yellow CRcoins Brand Theme) --- */
+
+.ranking-card.premium-leaderboard {
+  background: #fff;
+  border-radius: 24px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* Header Section with Deep Black/Charcoal Gradient and Golden Accent Line */
+.leaderboard-header-section {
+  background: linear-gradient(180deg, #1e1e24 0%, #0c0c0e 100%);
+  padding: 24px 20px 28px 20px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  border-bottom: 3px solid #f7c600; /* CRcoins Brand Yellow Border Line */
+}
+
+.leaderboard-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 18px;
+  width: 100%;
+}
+
+.leaderboard-title-row h3 {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  margin: 0;
+  text-transform: uppercase;
+  font-family: 'Outfit', 'Inter', sans-serif;
+  color: #fff;
+}
+
+.leaderboard-title-row .trophy-icon {
+  font-size: 20px;
+  color: #f7c600; /* CRcoins Gold/Yellow */
+  filter: drop-shadow(0 2px 8px rgba(247, 198, 0, 0.5));
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* Tab Pill Selector */
+.leaderboard-tabs-pill {
+  display: flex;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 9999px;
+  padding: 4px;
+  width: 100%;
+  max-width: 280px;
+  margin-bottom: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.leaderboard-tabs-pill .tab-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 8px 12px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: center;
+  outline: none;
+}
+
+.leaderboard-tabs-pill .tab-btn:hover {
+  color: #fff;
+}
+
+.leaderboard-tabs-pill .tab-btn.active {
+  background: #f7c600; /* CRcoins Brand Yellow */
+  color: #000;
+  font-weight: 800;
+  box-shadow: 0 4px 12px rgba(247, 198, 0, 0.3);
+}
+
+/* Podium Layout */
+.leaderboard-podium {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  margin-top: 10px;
+  padding-bottom: 4px;
+}
+
+.podium-column-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  max-width: 85px;
+  position: relative;
+  transition: transform 0.3s ease;
+}
+
+.podium-column-wrapper.gold-wrapper {
+  max-width: 95px;
+  z-index: 2;
+}
+
+/* Podium Avatars */
+.podium-avatar-wrapper {
+  position: relative;
+  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.podium-av {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #fff;
+  border: 3px solid #cbd5e1; /* Silver default */
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s;
+}
+
+.gold-wrapper .podium-av {
+  width: 64px;
+  height: 64px;
+  border-color: #f7c600; /* CRcoins Gold/Yellow */
+  box-shadow: 0 10px 25px rgba(247, 198, 0, 0.45);
+}
+
+.podium-avatar-wrapper.rank-3 .podium-av {
+  border-color: #d97706; /* Bronze */
+  box-shadow: 0 8px 20px rgba(217, 119, 6, 0.2);
+}
+
+.podium-av-inicial {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  border: 3px solid #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 18px;
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.gold-wrapper .podium-av-inicial {
+  width: 64px;
+  height: 64px;
+  font-size: 22px;
+  border-color: #f7c600;
+}
+
+.podium-avatar-wrapper.rank-3 .podium-av-inicial {
+  border-color: #d97706;
+}
+
+/* Floating Crown on Gold */
+.podium-crown {
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-5deg);
+  font-size: 20px;
+  color: #f7c600;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
+  animation: crownHover 2.5s ease-in-out infinite;
+  z-index: 10;
+}
+
+@keyframes crownHover {
+  0%, 100% { transform: translateX(-50%) translateY(0) rotate(-5deg); }
+  50% { transform: translateX(-50%) translateY(-3px) rotate(2deg); }
+}
+
+/* XP Badge below Avatars */
+.podium-badge-xp {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #f7c600; /* Brand Yellow background */
+  color: #000;
+  font-size: 9px;
+  font-weight: 850;
+  padding: 3px 8px;
+  border-radius: 99px;
+  white-space: nowrap;
+  box-shadow: 0 4px 10px rgba(247, 198, 0, 0.25);
+  border: 1px solid #f7c600;
+}
+
+.gold-wrapper .podium-badge-xp {
+  background: #fff;
+  color: #000;
+  font-size: 10px;
+  padding: 4px 10px;
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.25);
+  border-color: #fff;
+}
+
+/* Player Names */
+.podium-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+  margin-top: 10px;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+.podium-name.empty {
+  color: rgba(255, 255, 255, 0.35);
+  font-style: italic;
+  font-weight: 400;
+}
+
+.gold-wrapper .podium-name {
+  font-size: 12px;
+  font-weight: 800;
+  color: #fff;
+}
+
+/* 3D Columns */
+.podium-column {
+  width: 100%;
+  border-radius: 12px 12px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.podium-column.silver {
+  height: 50px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: none;
+}
+
+.podium-column.gold {
+  height: 75px;
+  background: linear-gradient(180deg, rgba(247, 198, 0, 0.22) 0%, rgba(247, 198, 0, 0.08) 100%);
+  border: 1px solid rgba(247, 198, 0, 0.35);
+  border-bottom: none;
+}
+
+.podium-column.bronze {
+  height: 38px;
+  background: linear-gradient(180deg, rgba(217, 119, 6, 0.14) 0%, rgba(217, 119, 6, 0.04) 100%);
+  border: 1px solid rgba(217, 119, 6, 0.18);
+  border-bottom: none;
+}
+
+.podium-num {
+  font-size: 24px;
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.25);
+  font-family: 'Outfit', 'Inter', sans-serif;
+}
+
+.gold .podium-num {
+  font-size: 32px;
+  color: #f7c600; /* Gold */
+}
+
+.silver .podium-num {
+  color: #cbd5e1; /* Silver */
+}
+
+.bronze .podium-num {
+  color: #d97706; /* Bronze */
+}
+
+/* Empty State Podiums */
+.podium-avatar-empty {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.25);
+  font-size: 14px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.gold-wrapper .podium-avatar-empty {
+  width: 64px;
+  height: 64px;
+}
+
+/* List Section (White Background) */
+.leaderboard-list-section {
+  background: #fff;
+  border-radius: 24px;
+  margin-top: -16px;
+  padding: 20px 16px 24px 16px;
+  position: relative;
+  z-index: 3;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.04);
+}
+
+.leaderboard-drag-indicator {
+  width: 36px;
+  height: 4px;
+  background: #e2e8f0;
+  border-radius: 99px;
+  margin: -10px auto 16px auto;
+}
+
+.ranking-lista.premium-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+}
+
+.ranking-item.premium-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 16px;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+}
+
+/* Highlighted "You" (Você) Row - Premium Black and Gold Border */
+.ranking-item.premium-row.is-you {
+  background: linear-gradient(135deg, #1e1e24 0%, #0c0c0e 100%);
+  border-color: #f7c600; /* Yellow Border */
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(247, 198, 0, 0.15);
+  animation: goldGlowPulse 2s infinite alternate;
+}
+
+@keyframes goldGlowPulse {
+  0% { box-shadow: 0 8px 20px rgba(247, 198, 0, 0.15); }
+  100% { box-shadow: 0 8px 26px rgba(247, 198, 0, 0.35); }
+}
+
+.ranking-pos.premium-pos {
+  font-size: 13px;
+  font-weight: 800;
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.is-you .ranking-pos.premium-pos {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.ranking-av.premium-av {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.ranking-av-inicial.premium-av-inicial {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  color: #475569;
+  font-weight: 700;
+  font-size: 14px;
+  border: 2px solid #fff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.is-you .ranking-av-inicial.premium-av-inicial {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.ranking-info.premium-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.ranking-info.premium-info strong {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.is-you .ranking-info.premium-info strong {
+  color: #fff;
+}
+
+.ranking-info.premium-info span {
+  font-size: 10px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.is-you .ranking-info.premium-info span {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+/* Highlighting tag "(Você)" - Yellow Badge with Black Text */
+.you-badge {
+  background: #f7c600;
+  color: #000;
+  font-size: 8px;
+  font-weight: 850;
+  padding: 2px 6px;
+  border-radius: 99px;
+  text-transform: uppercase;
+  margin-left: 6px;
+  vertical-align: middle;
+  border: 1px solid #f7c600;
+}
+
+.ranking-score.premium-score {
+  font-size: 13px;
+  font-weight: 800;
+  color: #854d0e; /* Amber text */
+  background: #fef9c3; /* Soft light yellow background */
+  padding: 4px 10px;
+  border-radius: 99px;
+}
+
+.is-you .ranking-score.premium-score {
+  color: #f7c600; /* Yellow text */
+  background: rgba(247, 198, 0, 0.15);
+  border: 1px solid rgba(247, 198, 0, 0.3);
+}
+
+.ranking-vazio.premium-vazio {
+  color: #64748b;
+  text-align: center;
+  font-size: 13px;
+  padding: 24px 8px;
+}
+
+/* Segmented Toggle (PC & Mobile) */
+.mobile-toggle-container {
+  display: flex;
+  background: var(--soft);
+  border-radius: 9999px;
+  padding: 4px;
+  margin: 0 auto 32px auto;
+  border: 1px solid var(--border);
+  max-width: 360px;
+}
+
+.mobile-toggle-btn {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 10px 16px;
+  font-weight: 750;
+  font-size: 13px;
+  border-radius: 9999px;
+  cursor: pointer;
+  color: var(--muted);
+  transition: all 0.2s ease;
+  outline: none;
+  text-align: center;
+}
+
+.mobile-toggle-btn.active {
+  background: #f7c600;
+  color: #000;
+  box-shadow: 0 4px 10px rgba(247, 198, 0, 0.2);
+}
+
+/* Responsive layout toggle visibility (Universal) */
+.desafios-layout.show-campanhas #campanhas-col {
+  display: block;
+  width: 100%;
+}
+.desafios-layout.show-campanhas aside {
+  display: none;
+}
+
+.desafios-layout.show-ranking #campanhas-col {
+  display: none;
+}
+.desafios-layout.show-ranking aside {
+  display: block;
+  width: 100%;
+  max-width: 850px; /* Spacious and beautiful width for the leaderboard on PC */
+  margin: 0 auto;
+}
+
+/* Widescreen Dashboard Side-by-Side Split Leaderboard */
+@media (min-width: 901px) {
+  .ranking-card.premium-leaderboard {
+    flex-direction: row;
+    max-width: 850px;
+    width: 100%;
+    margin: 0 auto;
+    align-items: stretch;
+    height: 520px; /* Fixed height for absolute layout stability! */
+  }
+  
+  .leaderboard-header-section {
+    width: 42%;
+    flex-shrink: 0;
+    border-bottom: none;
+    border-right: 3px solid #f7c600; /* Yellow divider border line */
+    padding: 32px 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  
+  .leaderboard-title-row {
+    margin-bottom: 0;
+  }
+  
+  .leaderboard-tabs-pill {
+    margin-bottom: 12px;
+    width: 100%;
+  }
+  
+  .leaderboard-podium {
+    margin-top: auto;
+    padding-bottom: 0;
+  }
+  
+  .leaderboard-list-section {
+    flex: 1;
+    margin-top: 0;
+    border-radius: 0;
+    padding: 24px;
+    overflow-y: auto;
+    height: 100%;
+    /* Custom scrollbar styling to match CRcoins black/yellow theme */
+    scrollbar-width: thin;
+    scrollbar-color: #f7c600 #f1f5f9;
+  }
+  
+  .leaderboard-list-section::-webkit-scrollbar {
+    width: 6px;
+  }
+  .leaderboard-list-section::-webkit-scrollbar-track {
+    background: #f1f5f9;
+  }
+  .leaderboard-list-section::-webkit-scrollbar-thumb {
+    background-color: #f7c600;
+    border-radius: 99px;
+  }
+  
+  .leaderboard-drag-indicator {
+    display: none;
+  }
+}
+
+.ranking-vazio {
+  text-align: center;
+  padding: 20px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* --- Página de Campanha (campanha.html) --- */
+
+.campanha-topo-acoes {
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.btn-voltar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface); /* Replicated from .link-voltar for perfect theme compatibility */
+  border: 1px solid var(--border); /* Replicated from .link-voltar */
+  color: var(--ink); 
+  padding: 9px 20px;
+  border-radius: var(--r-pill); 
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: var(--sh);
+  transition: border-color 0.2s, color 0.2s, transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+}
+
+.btn-voltar i {
+  font-size: 16px;
+  transition: transform 0.2s ease;
+}
+
+.btn-voltar:hover {
+  color: var(--orange); /* Replicated from .link-voltar */
+  border-color: var(--orange); /* Replicated from .link-voltar */
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.12);
+}
+
+.btn-voltar:hover i {
+  transform: translateX(-4px); /* Micro-animation: nudge left! */
+}
+
+.campanha-hero {
+  border-radius: var(--r-card);
+  padding: 32px 28px;
+  color: #fff;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+.campanha-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(0,0,0,0.1), rgba(0,0,0,0.3));
+}
+.campanha-hero > * { position: relative; z-index: 1; }
+.campanha-hero h1 { color: #fff; font-size: 26px; margin-bottom: 8px; }
+.campanha-hero p { opacity: 0.9; font-size: 14px; max-width: 500px; }
+
+/* Faixa com as cores da campanha (primária -> secundária).
+   Aparece sempre, mesmo quando há banner cobrindo o degradê de fundo. */
+.campanha-hero-accent {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 6px;
+  background: linear-gradient(90deg, var(--camp-cor, #6366f1), var(--camp-cor2, #a78bfa));
+  z-index: 5;
+}
+
+.campanha-hero-stats {
+  display: flex;
+  gap: 24px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+.campanha-hero-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.campanha-hero-stat span { font-size: 11px; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.5px; }
+.campanha-hero-stat strong { font-size: 20px; font-weight: 800; }
+
+/* --- Grid de Desafios --- */
+
+.desafios-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.desafio-card {
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: var(--sh);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+  position: relative;
+  animation: fadeSlideUp 0.4s ease both;
+}
+.desafio-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--sh2);
+}
+.desafio-card.concluido {
+  border: 1px solid rgba(247, 198, 0, 0.2) !important;
+  box-shadow: none !important;
+  transform: none !important;
+  cursor: not-allowed;
+}
+
+.desafio-concluido-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(11, 11, 13, 0.78); /* Deep translucent grey overlay */
+  backdrop-filter: blur(6px); /* Premium blur effect */
+  -webkit-backdrop-filter: blur(6px);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  pointer-events: all; /* Blocks click events from reaching the card */
+  cursor: not-allowed;
+}
+
+.desafio-concluido-selo {
+  width: 84px;
+  height: 84px;
+  background: #0b0b0d; /* Deep black background for the circular stamp */
+  border: 3px solid #f7c600; /* Gold border */
+  color: #f7c600; /* Gold text/icon */
+  border-radius: 50%; /* Circular stamp as requested */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 25px rgba(247, 198, 0, 0.35);
+  transform: rotate(-8deg); /* Beautiful tilted stamp effect */
+  animation: stampPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+.desafio-concluido-selo i {
+  font-size: 32px; /* Big checkmark in center */
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.desafio-concluido-selo span {
+  font-size: 8.5px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+@keyframes stampPop {
+  0% { transform: scale(0.5) rotate(15deg); opacity: 0; }
+  100% { transform: scale(1) rotate(-8deg); opacity: 1; }
+}
+.desafio-card.bloqueado {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.desafio-card-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.desafio-ico {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.desafio-card-top h3 {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.desafio-card p {
+  color: var(--muted);
+  font-size: 13px;
+  flex: 1;
+}
+
+.desafio-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--muted);
+  flex-wrap: wrap;
+}
+.desafio-card-meta span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.desafio-card-meta .xp-tag {
+  font-weight: 700;
+  color: #6366f1;
+}
+.desafio-card-meta .pts-tag {
+  font-weight: 700;
+  color: #b9820a;
+}
+
+.desafio-status-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+.desafio-status-badge.done {
+  background: #e8f5e9;
+  color: var(--pos);
+}
+
+/* --- Modal de Quiz --- */
+
+.quiz-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.25s;
+}
+
+.quiz-container {
+  background: var(--surface);
+  border-radius: var(--r-card);
+  width: 90%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--sh2);
+  animation: slideUp 0.3s ease;
+}
+
+.quiz-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.quiz-header h3 {
+  font-size: 16px;
+  font-weight: 700;
+}
+.quiz-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: var(--muted);
+  padding: 4px;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+.quiz-close:hover { background: var(--soft); }
+
+.quiz-progress {
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 16px;
+}
+.quiz-progress-bar {
+  flex: 1;
+  height: 5px;
+  background: var(--soft);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.quiz-progress-fill {
+  height: 100%;
+  background: var(--camp-cor, #6366f1);
+  border-radius: 99px;
+  transition: width 0.3s ease;
+}
+.quiz-progress-text {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.quiz-timer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+  padding: 8px 24px 0;
+}
+.quiz-timer i { font-size: 16px; }
+.quiz-timer.urgente { color: var(--neg); animation: pulse 1s infinite; }
+
+.quiz-body {
+  padding: 24px;
+}
+
+.quiz-pergunta {
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.5;
+  margin-bottom: 20px;
+  color: var(--ink);
+}
+
+.quiz-alternativas {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.quiz-alt {
+  padding: 14px 16px;
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface);
+}
+.quiz-alt:hover {
+  border-color: #6366f1;
+  background: #f5f3ff;
+}
+.quiz-alt.selecionada {
+  border-color: #6366f1;
+  background: #ede9fe;
+  color: #4338ca;
+  font-weight: 600;
+}
+.quiz-alt .alt-letra {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 12px;
+  background: var(--soft);
+  color: var(--muted);
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+.quiz-alt.selecionada .alt-letra {
+  background: #6366f1;
+  color: #fff;
+}
+
+/* Feedback de resposta (no resultado) */
+.quiz-alt.certa {
+  border-color: var(--pos) !important;
+  background: #e8f5e9 !important;
+  color: #1b5e20 !important;
+}
+.quiz-alt.certa .alt-letra {
+  background: var(--pos) !important;
+  color: #fff !important;
+}
+.quiz-alt.errada {
+  border-color: var(--neg) !important;
+  background: #fdecea !important;
+  color: #b71c1c !important;
+}
+.quiz-alt.errada .alt-letra {
+  background: var(--neg) !important;
+  color: #fff !important;
+}
+
+.quiz-footer {
+  padding: 16px 24px 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.quiz-footer button {
+  padding: 12px 28px;
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.quiz-btn-next {
+  background: var(--camp-cor, #6366f1);
+  color: #fff;
+}
+.quiz-btn-next:hover { background: var(--camp-cor, #6366f1); filter: brightness(0.92); }
+.quiz-btn-next:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.quiz-btn-secondary {
+  background: var(--soft);
+  color: var(--ink);
+}
+
+/* --- Tela de Resultado --- */
+
+.quiz-resultado {
+  text-align: center;
+  padding: 32px 24px;
+}
+.quiz-resultado-emoji {
+  font-size: 56px;
+  margin-bottom: 12px;
+  animation: bounceIn 0.5s ease;
+}
+.quiz-resultado h2 {
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+.quiz-resultado .sub {
+  margin-bottom: 20px;
+  display: block;
+}
+
+.quiz-resultado-stats {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+.quiz-resultado-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.quiz-resultado-stat strong {
+  font-size: 24px;
+  font-weight: 800;
+}
+.quiz-resultado-stat span {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.quiz-resultado-recompensas {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.recompensa-tag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--r-pill);
+  font-size: 14px;
+  font-weight: 700;
+}
+.recompensa-tag.xp {
+  background: #ede9fe;
+  color: #6366f1;
+}
+.recompensa-tag.coins {
+  background: #fff4dc;
+  color: #b9820a;
+}
+
+.quiz-resultado-btns {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* --- Confetti particles (lightweight CSS-only) --- */
+
+@keyframes confetti-fall {
+  0%   { transform: translateY(-100vh) rotate(0); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+.confetti-particle {
+  position: fixed;
+  top: -10px;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  z-index: 1001;
+  animation: confetti-fall 2.5s ease-out forwards;
+  pointer-events: none;
+}
+
+/* --- Animations --- */
+
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes bounceIn {
+  0%   { transform: scale(0.3); opacity: 0; }
+  50%  { transform: scale(1.1); }
+  70%  { transform: scale(0.95); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.5; }
+}
+
+/* --- Estado vazio de desafios --- */
+
+.desafios-vazio {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--muted);
+}
+.desafios-vazio i {
+  font-size: 48px;
+  margin-bottom: 12px;
+  display: block;
+  opacity: 0.4;
+}
+.desafios-vazio h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+/* --- Admin: Desafios Section --- */
+
+.admin-desafio-lista { list-style: none; }
+
+.admin-desafio-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--soft);
+  gap: 12px;
+}
+.admin-desafio-item:last-child { border-bottom: none; }
+
+.admin-pergunta-item {
+  padding: 10px 14px;
+  background: var(--soft);
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+.admin-pergunta-item:last-child { margin-bottom: 0; }
+
+.admin-alt-list {
+  list-style: none;
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-left: 12px;
+}
+.admin-alt-item {
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.admin-alt-item.correta { color: var(--pos); font-weight: 600; }
+.admin-alt-item.errada  { color: var(--muted); }
+
+/* ==================================================================
+   NEW WIDESCREEN LEADERBOARD DASHBOARD STYLES (Black & Yellow Theme)
+   ================================================================== */
+
+/* When showing ranking, expand the main container to fill the screen */
+.conteudo-desafios:has(.show-ranking) {
+  max-width: 96% !important;
+  width: 96% !important;
+  padding: 32px 2% !important;
+}
+
+/* When showing campaigns, keep it centered and narrow (original 720px width) */
+.conteudo-desafios:has(.show-campanhas) {
+  max-width: 720px !important;
+  width: 95% !important;
+  padding: 32px 24px !important;
+}
+
+#ranking-col {
+  background: #0b0b0d; /* Deep black/charcoal unified dashboard background */
+  border: 1px solid #1f1f24;
+  border-radius: 28px;
+  padding: 20px;
+  color: #fff;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+  width: 100% !important;    /* Expand to fill all horizontal screen space! */
+  max-width: 100% !important;  /* Expand to fill all horizontal screen space! */
+}
+
+@media (min-width: 901px) {
+  #ranking-col {
+    padding: 40px;
+  }
+}
+
+.ranking-dashboard-header {
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.ranking-dashboard-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
+  font-family: 'Outfit', 'Inter', sans-serif;
+  margin-bottom: 4px;
+}
+
+.ranking-dashboard-title .trophy-icon {
+  color: #f7c600;
+  font-size: 28px;
+  filter: drop-shadow(0 2px 10px rgba(247, 198, 0, 0.4));
+  animation: trophyFloat 3s ease-in-out infinite;
+}
+
+@keyframes trophyFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-4px) rotate(3deg); }
+}
+
+.ranking-dashboard-sub {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.4) !important; /* Crisp visible subtitle on dark background */
+  margin-top: 4px;
+  margin-bottom: 24px;
+}
+
+/* Tab Pill Selector for Dashboard Header */
+.leaderboard-tabs-pill.dashboard-tabs {
+  display: flex;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 9999px;
+  padding: 4px;
+  width: 100%;
+  max-width: 320px;
+  margin-bottom: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.leaderboard-tabs-pill.dashboard-tabs .tab-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.5) !important; /* Visible text on dark background */
+  font-size: 12px;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  outline: none;
+}
+
+.leaderboard-tabs-pill.dashboard-tabs .tab-btn:hover {
+  color: #fff !important;
+}
+
+.leaderboard-tabs-pill.dashboard-tabs .tab-btn.active {
+  background: #f7c600 !important; /* CRcoins Brand Yellow */
+  color: #000 !important; /* Dark text for contrast */
+  font-weight: 850;
+  box-shadow: 0 4px 12px rgba(247, 198, 0, 0.3);
+}
+
+/* Widescreen Layout Split Pane */
+.ranking-dashboard-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+}
+
+@media (min-width: 901px) {
+  .ranking-dashboard-wrapper {
+    display: grid;
+    grid-template-columns: 2.15fr 0.85fr; /* 70% left, 30% right */
+    gap: 36px; /* High gap to breathe and separate components beautifully */
+    align-items: start;
+  }
+}
+
+.ranking-main-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Left Pane Podium Card (Horizontal/Compact style for the top) */
+.leaderboard-podium-card {
+  background: #121214;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 20px;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.podium-card-glow {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(247, 198, 0, 0.04) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Left Pane Table Card */
+.leaderboard-table-card {
+  background: #121214;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 20px;
+  padding: 8px 16px 16px 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.leaderboard-table th {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 11px;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 16px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.leaderboard-table td {
+  padding: 14px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  color: #fff;
+  font-size: 13px;
+  vertical-align: middle;
+}
+
+.leaderboard-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Table Row Highlights */
+.leaderboard-table tr.is-you {
+  background: linear-gradient(90deg, rgba(247, 198, 0, 0.06) 0%, transparent 100%);
+}
+
+.leaderboard-table tr.is-you td {
+  border-color: rgba(247, 198, 0, 0.15);
+}
+
+/* Row elements */
+.leaderboard-table-rank {
+  font-weight: 800;
+  color: #94a3b8;
+  font-size: 14px;
+  width: 40px;
+}
+
+.leaderboard-table-rank.top-rank {
+  color: #f7c600;
+}
+
+.leaderboard-table-player {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.leaderboard-table-player-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.leaderboard-table-player-info strong {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.leaderboard-table-player-info span {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 11px;
+}
+
+.leaderboard-table-xp {
+  font-weight: 750;
+  color: #f7c600 !important; /* CRcoins Brand Yellow */
+  text-align: right;
+}
+
+.leaderboard-table-progress {
+  padding-left: 24px !important;
+}
+
+.table-progress-bar-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.table-progress-bar {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 99px;
+  overflow: hidden;
+  position: relative;
+}
+
+.table-progress-bar-fill {
+  height: 100%;
+  background: #f7c600;
+  border-radius: 99px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.table-progress-percent {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+  width: 32px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* Right Pane: Seu Desempenho Widget */
+.ranking-side-pane {
+  position: sticky;
+  top: 80px; /* Stays fixed as you scroll the table! */
+}
+
+.seu-desempenho-card {
+  background: #121214;
+  border: 2px solid #f7c600; /* Yellow highlight border */
+  border-radius: 24px;
+  padding: 24px;
+  color: #fff;
+  box-shadow: 0 10px 30px rgba(247, 198, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+  overflow: hidden;
+  animation: fadeSlideUp 0.5s ease both;
+}
+
+.seu-desempenho-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle, rgba(247, 198, 0, 0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.seu-desempenho-header-tag {
+  align-self: flex-start;
+  background: rgba(247, 198, 0, 0.15);
+  color: #f7c600;
+  font-size: 9px;
+  font-weight: 850;
+  padding: 4px 10px;
+  border-radius: 99px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid rgba(247, 198, 0, 0.25);
+}
+
+.seu-desempenho-profile {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.seu-desempenho-av {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 2.5px solid #f7c600;
+  box-shadow: 0 4px 15px rgba(247, 198, 0, 0.2);
+  object-fit: cover;
+}
+
+.seu-desempenho-av-inicial {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 2.5px solid #f7c600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 800;
+  box-shadow: 0 4px 15px rgba(247, 198, 0, 0.2);
+}
+
+.seu-desempenho-name-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.seu-desempenho-nome {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.seu-desempenho-handle {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.seu-desempenho-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 16px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.seu-desempenho-stat-box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.seu-desempenho-stat-label {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.seu-desempenho-stat-value {
+  font-size: 22px;
+  font-weight: 800;
+  font-family: 'Outfit', 'Inter', sans-serif;
+}
+
+.seu-desempenho-stat-value.rank-val {
+  color: #f7c600;
+  text-shadow: 0 0 10px rgba(247, 198, 0, 0.3);
+}
+
+.seu-desempenho-stat-value.xp-val {
+  color: #fff;
+}
+
+.seu-desempenho-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.seu-desempenho-tip {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.5;
+}
+
+.seu-desempenho-tip b {
+  color: #f7c600;
+}
+
+.seu-desempenho-progress-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.seu-desempenho-progress-bar {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.seu-desempenho-progress-fill {
+  height: 100%;
+  background: #f7c600;
+  border-radius: 99px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.seu-desempenho-progress-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 600;
+}
+
+/* Widescreen Toggle Override: On PC we hide the split panel until they select Leaderboard */
+@media (min-width: 901px) {
+  .desafios-layout.show-campanhas aside {
+    display: none;
+  }
+  .desafios-layout.show-ranking aside {
+    display: block;
+    width: 100%;
+    max-width: 100%; /* Spans to the full width of the conteudo-desafios wrapper */
+    margin: 0 auto;
+  }
+}
+
+/* Estilos dos Ícones das Campanhas */
+.titulo-icone {
+  margin-right: 8px;
+  font-size: 1.15em;
+  vertical-align: middle;
+  opacity: 0.95;
+}
+
+.camp-icon-fallback {
+  font-size: 64px;
+  color: #fff;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.25));
+  animation: floatIcon 3s ease-in-out infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes floatIcon {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.campanha-card {
+  border: 1px solid var(--border);
+}
+
+.campanha-card:hover {
+  border-color: rgba(247, 198, 0, 0.4);
+}
+
+/* --- Desafio Bloqueado (Fase Bloqueada) --- */
+.desafio-card.bloqueado {
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.desafio-bloqueado-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(11, 11, 13, 0.8);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  pointer-events: all;
+  cursor: not-allowed;
+}
+
+.desafio-bloqueado-selo {
+  width: 84px;
+  height: 84px;
+  background: #0b0b0d;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.4);
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+  transform: rotate(-5deg);
+  animation: stampPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+.desafio-bloqueado-selo i {
+  font-size: 32px;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.desafio-bloqueado-selo span {
+  font-size: 8.5px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+/* --- Linha do Tempo Visual do Studio (Trilha de Fases) --- */
+#fases-studio-lista {
+  position: relative;
+  padding-left: 24px;
+  margin-left: 12px;
+  border-left: 2px dashed rgba(99, 102, 241, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.fase-item-card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.fase-item-card::before {
+  content: '';
+  position: absolute;
+  left: -35px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--canvas);
+  border: 3px solid rgba(99, 102, 241, 0.4);
+  transition: all 0.2s ease;
+  z-index: 2;
+}
+
+.fase-item-card.selected::before {
+  background: #6366f1;
+  border-color: #a78bfa;
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.4);
+}
+
+.fase-item-card:hover {
+  transform: translateX(4px);
+  border-color: rgba(99, 102, 241, 0.4);
+}
+
+.fase-item-card.selected {
+  border-color: #6366f1;
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.1);
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.03) 0%, var(--surface) 100%);
+}
+
+.anuncio-item-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+/* Customizações do conteúdo do Anúncio (Markdown) */
+.anuncio-conteudo {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.anuncio-conteudo strong, .anuncio-conteudo b {
+  font-weight: 800 !important;
+  color: var(--ink) !important;
+}
+.anuncio-conteudo em, .anuncio-conteudo i {
+  font-style: italic;
+}
+.anuncio-conteudo a {
+  color: #6366f1 !important;
+  text-decoration: underline !important;
+  font-weight: 700 !important;
+  transition: opacity 0.2s ease;
+}
+.anuncio-conteudo a:hover {
+  opacity: 0.8;
+}
+.anuncio-conteudo h1, .anuncio-conteudo h2, .anuncio-conteudo h3 {
+  color: var(--ink);
+  font-weight: 800;
+  margin: 12px 0 8px 0;
+}
+.anuncio-conteudo h1 { font-size: 18px; }
+.anuncio-conteudo h2 { font-size: 16px; }
+.anuncio-conteudo h3 { font-size: 14px; }
+.anuncio-conteudo ul, .anuncio-conteudo ol {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+.anuncio-conteudo ul {
+  list-style-type: disc;
+}
+.anuncio-conteudo ol {
+  list-style-type: decimal;
+}
+.anuncio-conteudo li {
+  margin: 4px 0;
+}
+.anuncio-conteudo blockquote {
+  border-left: 4px solid var(--border);
+  padding-left: 12px;
+  margin: 12px 0;
+  color: var(--muted);
+  font-style: italic;
+}
+.anuncio-conteudo code {
+  background: var(--canvas);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 12px;
+  border: 1px solid var(--border);
+}
+.anuncio-conteudo pre {
+  background: var(--canvas);
+  padding: 12px;
+  border-radius: 8px;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  margin: 12px 0;
+}
+.anuncio-conteudo pre code {
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+/* Borda Animada Premium para o Modal de Anúncio */
+@keyframes borderRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.modal-anuncio-animated {
+  position: relative;
+  padding: 3px !important; /* Espessura da borda */
+  background: transparent !important;
+  border-radius: 20px !important;
+  overflow: hidden !important;
+  border: none !important;
+  /* Brilho neon suave e fixo baseado na cor temática */
+  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.15)) drop-shadow(0 0 6px var(--theme-color, #6366f1));
+}
+
+.modal-anuncio-animated::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  /* Um único "cometa" de luz: cabeça branca brilhante (engrossa visualmente devido ao brilho) e cauda na cor temática */
+  background: conic-gradient(
+    from 0deg,
+    #ffffff 0%,
+    var(--theme-color, #6366f1) 8%,
+    transparent 30%,
+    transparent 100%
+  );
+  /* Tempo de 5 segundos: movimento contínuo e perceptível, mas calmo o suficiente para não causar tontura */
+  animation: borderRotate 5s linear infinite;
+  z-index: 1;
+}
+
+.modal-anuncio-animated .modal-inner {
+  position: relative;
+  background: var(--surface);
+  border-radius: 17px;
+  padding: 24px;
+  z-index: 2;
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
 

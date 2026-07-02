@@ -5,6 +5,9 @@
   "outputDirectory": "dist",
   "cleanUrls": true,
   "trailingSlash": false,
+  "crons": [
+    { "path": "/api/cron/limpeza", "schedule": "0 4 * * *" }
+  ],
   "headers": [
     {
       "source": "/assets/(.*)",

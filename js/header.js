@@ -1,5 +1,12 @@
 import { supabase, COIN_SVG } from "./supabase.js";
 import { logout, requireAuth } from "./auth.js";
+import { marked } from "marked";
+import { urlImagem } from "./storage.js";
+
+marked.setOptions({
+  gfm: true,
+  breaks: true
+});
 
 
 export async function montarHeader(ativo) {
@@ -208,10 +215,13 @@ export async function montarHeader(ativo) {
       limpoEm = limpoLocal;
     }
 
+    const trintaDiasAtras = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
     let query = supabase
       .from("transacoes_carteira")
       .select("id, tipo, valor, descricao, criado_em")
       .in("tipo", ["transferencia_recebida", "ajuste_admin", "resgate_codigo"])
+      .gt("criado_em", trintaDiasAtras)
       .order("criado_em", { ascending: false })
       .limit(10);
 
@@ -323,14 +333,13 @@ export async function montarHeader(ativo) {
     });
     userDropdown.addEventListener("click", (e) => e.stopPropagation());
     document.addEventListener("click", () => (userDropdown.hidden = true));
-
-
     const { data: perfil } = await supabase
       .from("usuarios")
-      .select("nome, username, avatar_url")
+      .select("id, nome, username, avatar_url")
       .maybeSingle();
 
     if (perfil) {
+      checarAnuncios(perfil.id);
       const username = perfil.username || null;
       const nome = perfil.nome || "Você";
       const db_avatar_url = perfil.avatar_url || null;
@@ -799,4 +808,151 @@ export async function montarHeader(ativo) {
   }
 
   montarUsuario();
+}
+
+async function checarAnuncios(userId) {
+  if (!userId) return;
+  
+  try {
+    const { data: anuncios, error } = await supabase
+      .from("anuncios")
+      .select("id, titulo, conteudo, imagem_url, cor_destaque, atualizado_em")
+      .eq("ativo", true)
+      .lte("inicio", new Date().toISOString())
+      .or(`fim.is.null,fim.gte.${new Date().toISOString()}`)
+      .order("criado_em", { ascending: false });
+
+    if (error || !anuncios || anuncios.length === 0) return;
+
+    const anuncioIds = anuncios.map(a => a.id);
+    const { data: leituras } = await supabase
+      .from("anuncio_leituras")
+      .select("anuncio_id, lido_em")
+      .eq("usuario_id", userId)
+      .in("anuncio_id", anuncioIds);
+
+    const mapaLeituras = {};
+    (leituras || []).forEach(l => {
+      mapaLeituras[l.anuncio_id] = new Date(l.lido_em);
+    });
+
+    // Encontra o primeiro anúncio que não foi lido ou cuja data de atualização é posterior à leitura
+    const naoLido = anuncios.find(a => {
+      const dataLeitura = mapaLeituras[a.id];
+      if (!dataLeitura) return true; // Nunca lido
+      
+      const dataAtualizacao = new Date(a.atualizado_em);
+      return dataAtualizacao > dataLeitura; // Atualizado após a leitura!
+    });
+
+    if (!naoLido) return;
+
+    exibirModalAnuncio(naoLido, userId);
+  } catch (err) {
+    console.error("Erro ao checar anúncios:", err);
+  }
+}
+
+async function exibirModalAnuncio(anuncio, userId) {
+  const modal = document.createElement("div");
+  modal.id = `modal-anuncio-${anuncio.id}`;
+  modal.className = "modal-bg";
+  modal.style.zIndex = "99999";
+  
+  let imgHtml = "";
+  if (anuncio.imagem_url) {
+    const { url, fit, ratio } = obterAjusteImagem(anuncio.imagem_url);
+    const ratioValue = MAPA_RATIOS[ratio] || "2.5 / 1";
+    
+    // Resolve a URL pública do Supabase Storage
+    const publicUrl = await urlImagem(url);
+    
+    if (fit === "contain-blur") {
+      imgHtml = `
+        <div class="anuncio-img-wrapper" style="position: relative; aspect-ratio: ${ratioValue}; border-radius: 12px; margin-bottom: 16px; overflow: hidden; border: 1px solid var(--border); background: var(--canvas);">
+          <div style="position: absolute; inset: 0; background: url('${publicUrl}') no-repeat center/cover; filter: blur(15px) brightness(0.65); transform: scale(1.15);"></div>
+          <div style="position: absolute; inset: 0; background: url('${publicUrl}') no-repeat center/contain;"></div>
+        </div>`;
+    } else if (fit === "contain") {
+      imgHtml = `
+        <div class="anuncio-img" style="background: var(--canvas) url('${publicUrl}') no-repeat center/contain; aspect-ratio: ${ratioValue}; border-radius: 12px; margin-bottom: 16px; border: 1px solid var(--border);"></div>`;
+    } else {
+      imgHtml = `
+        <div class="anuncio-img" style="background: url('${publicUrl}') no-repeat center/cover; aspect-ratio: ${ratioValue}; border-radius: 12px; margin-bottom: 16px; border: 1px solid var(--border);"></div>`;
+    }
+  }
+
+  modal.innerHTML = `
+    <div class="modal modal-anuncio-animated" style="max-width: 480px; --theme-color: ${anuncio.cor_destaque || '#6366f1'}; animation: modalEntrada 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;">
+      <div class="modal-inner">
+        <button class="modal-close" id="btn-fechar-anuncio" style="position: absolute; top: 16px; right: 16px; font-size: 16px; background: none; border: none; cursor: pointer; color: var(--muted); transition: color 0.2s; z-index: 10;">✕</button>
+        
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+          <span style="background: ${anuncio.cor_destaque}15; color: ${anuncio.cor_destaque}; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Comunicado</span>
+        </div>
+
+        <h2 style="font-size: 20px; font-weight: 800; color: var(--ink); margin: 0 0 16px 0; line-height: 1.3;">${anuncio.titulo}</h2>
+        
+        ${imgHtml}
+        
+        <div class="anuncio-conteudo" style="font-size: 13.5px; line-height: 1.6; color: var(--muted); max-height: 240px; overflow-y: auto; margin-bottom: 24px; padding-right: 4px;">
+          ${marked.parse(anuncio.conteudo)}
+        </div>
+
+        <button id="btn-entendido-anuncio" style="width: 100%; padding: 12px; border-radius: 12px; background: ${anuncio.cor_destaque}; color: white; border: none; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: opacity 0.2s, transform 0.1s;">
+          <i class="ph-fill ph-check-circle" style="font-size: 16px;"></i> Entendido
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  document.body.classList.add("modal-open");
+
+  const fechar = async () => {
+    try {
+      await supabase.from("anuncio_leituras").upsert({
+        usuario_id: userId,
+        anuncio_id: anuncio.id,
+        lido_em: new Date().toISOString()
+      });
+    } catch (err) {
+      console.error("Erro ao marcar anúncio como lido:", err);
+    }
+    
+    modal.remove();
+    document.body.classList.remove("modal-open");
+  };
+
+  modal.querySelector("#btn-fechar-anuncio").addEventListener("click", fechar);
+  modal.querySelector("#btn-entendido-anuncio").addEventListener("click", fechar);
+  
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) {
+      fechar();
+    }
+  });
+}
+
+const MAPA_RATIOS = {
+  "3.5-1": "3.5 / 1",
+  "2.5-1": "2.5 / 1",
+  "16-9": "16 / 9",
+  "4-3": "4 / 3"
+};
+
+function obterAjusteImagem(url) {
+  if (!url) return { url: "", fit: "cover", ratio: "2.5-1" };
+  const parts = url.split("#");
+  const cleanUrl = parts[0];
+  let fit = "cover";
+  let ratio = "2.5-1";
+  
+  if (parts[1]) {
+    const params = new URLSearchParams(parts[1]);
+    fit = params.get("fit") || "cover";
+    ratio = params.get("ratio") || "2.5-1";
+  }
+  
+  return { url: cleanUrl, fit, ratio };
 }

@@ -42,7 +42,7 @@ export default async function handler(req, res) {
 
   const { data: wl, error: wlError } = await admin
     .from("whitelist")
-    .select("email, nome, username")
+    .select("email, nome, username, expira_em")
     .ilike("email", email)
     .eq("ativo", true)
     .maybeSingle();
@@ -50,6 +50,11 @@ export default async function handler(req, res) {
   if (wlError) return res.status(500).json({ error: wlError.message });
   if (!wl) {
     return res.status(403).json({ error: "E-mail não autorizado. Fale com a Keila." });
+  }
+  if (wl.expira_em && new Date(wl.expira_em) < new Date()) {
+    return res.status(403).json({
+      error: "O prazo para o seu primeiro acesso expirou. Fale com a Keila para liberar de novo.",
+    });
   }
 
   

@@ -8,8 +8,12 @@
     <link rel="stylesheet" href="/css/style.css" />
   </head>
   <body class="admin-layout">
+    <button id="sidebar-show" class="sidebar-show" type="button" title="Expandir menu" aria-label="Expandir menu"><i class="ph-fill ph-sidebar-simple"></i></button>
     <aside class="sidebar">
-      <div class="logo sidebar-logo"><span class="logo-cr">CR</span> <b>Store</b></div>
+      <div class="logo sidebar-logo">
+        <span><span class="logo-cr">CR</span> <b>Store</b></span>
+        <button id="sidebar-toggle" class="sidebar-toggle" type="button" title="Recolher menu" aria-label="Recolher menu"><i class="ph-fill ph-sidebar-simple"></i></button>
+      </div>
         <nav class="sidebar-nav">
           <a href="/carteira" class="sidebar-back-link">← Voltar ao app</a>
           <button data-sec="usuarios" class="ativo" type="button" style="margin-top: 10px;">Usuários</button>
@@ -17,6 +21,8 @@
           <button data-sec="acessos" type="button">Acessos</button>
           <button data-sec="campanhas" type="button">Campanhas</button>
           <button data-sec="pedidos" type="button">Pedidos</button>
+          <button data-sec="desafios-admin" type="button">Desafios</button>
+          <button data-sec="anuncios-admin" type="button">Comunicados</button>
         </nav>
       <div class="sidebar-foot">
         <button id="sair" class="link" style="text-align: left;">Sair</button>
@@ -238,6 +244,765 @@
           </div>
         </section>
       </div>
+
+        <!-- DESAFIOS (Studio de Desafios) -->
+        <section class="sec" data-sec="desafios-admin" hidden>
+          <style>
+            /* Challenge Studio Styles */
+            .cd-dashboard-head {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 24px;
+            }
+            .cd-grid {
+              display: grid;
+              grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+              gap: 20px;
+              list-style: none;
+              padding: 0;
+            }
+            .cd-card {
+              background: var(--surface);
+              border-radius: 16px;
+              border: 1px solid var(--border);
+              overflow: hidden;
+              box-shadow: var(--sh);
+              transition: transform 0.2s, box-shadow 0.2s;
+              display: flex;
+              flex-direction: column;
+            }
+            .cd-card:hover {
+              transform: translateY(-2px);
+              box-shadow: var(--sh2);
+            }
+            .cd-card-banner {
+              height: 120px;
+              background-size: cover;
+              background-position: center;
+              position: relative;
+            }
+            .cd-card-banner::after {
+              content: '';
+              position: absolute;
+              inset: 0;
+              background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.4));
+            }
+            .cd-card-badge {
+              position: absolute;
+              top: 12px;
+              right: 12px;
+              background: rgba(0,0,0,0.6);
+              color: #fff;
+              padding: 4px 10px;
+              border-radius: 9999px;
+              font-size: 11px;
+              font-weight: 700;
+              z-index: 2;
+            }
+            .cd-card-body {
+              padding: 16px;
+              flex-grow: 1;
+              display: flex;
+              flex-direction: column;
+              gap: 8px;
+            }
+            .cd-card-body h3 {
+              font-size: 16px;
+              font-weight: 700;
+              margin: 0;
+              color: var(--ink);
+            }
+            .cd-card-body p {
+              font-size: 13px;
+              color: var(--muted);
+              margin: 0;
+              line-height: 1.4;
+              flex-grow: 1;
+            }
+            .cd-card-meta {
+              display: flex;
+              gap: 8px;
+              font-size: 12px;
+              font-weight: 600;
+              margin-top: 8px;
+              border-top: 1px solid var(--soft);
+              padding-top: 8px;
+            }
+            .cd-card-meta span {
+              display: flex;
+              align-items: center;
+              gap: 4px;
+            }
+            .cd-card-footer {
+              padding: 12px 16px;
+              background: var(--soft);
+              border-top: 1px solid var(--border);
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            }
+
+            /* Studio Workspace Split */
+            .cd-studio {
+              display: flex;
+              flex-direction: column;
+              gap: 20px;
+            }
+            .cd-studio-header {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              border-bottom: 1px solid var(--border);
+              padding-bottom: 16px;
+              margin-bottom: 8px;
+            }
+            .cd-studio-layout {
+              display: flex;
+              gap: 24px;
+              align-items: flex-start;
+            }
+            .cd-studio-left {
+              flex: 1;
+              max-width: 40%;
+              display: flex;
+              flex-direction: column;
+              gap: 20px;
+              min-width: 320px;
+            }
+            .cd-studio-right {
+              flex: 1.5;
+              background: var(--surface);
+              border-radius: 16px;
+              border: 1px solid var(--border);
+              padding: 20px;
+              box-shadow: var(--sh);
+              min-height: 500px;
+              display: flex;
+              flex-direction: column;
+              gap: 20px;
+              min-width: 0;
+            }
+
+            /* Responsividade: Empilha colunas verticalmente em telas menores para evitar apertar a UI */
+            @media (max-width: 1024px) {
+              .cd-studio-layout {
+                flex-direction: column;
+                align-items: stretch;
+              }
+              .cd-studio-left {
+                max-width: 100%;
+                width: 100%;
+                min-width: 0;
+              }
+              .cd-studio-right {
+                width: 100%;
+                min-width: 0;
+              }
+            }
+
+            /* Expande o limite de largura do painel admin principal para 1350px quando no modo Studio */
+            .admin-main.studio-mode {
+              max-width: 1350px !important;
+              transition: max-width 0.2s ease-in-out;
+            }
+            
+            /* Studio elements */
+            .studio-block {
+              background: var(--surface);
+              border-radius: 16px;
+              border: 1px solid var(--border);
+              padding: 20px;
+              box-shadow: var(--sh);
+              display: flex;
+              flex-direction: column;
+              gap: 16px;
+            }
+            .studio-block-title {
+              font-size: 16px;
+              font-weight: 700;
+              color: var(--ink);
+              border-bottom: 1px solid var(--soft);
+              padding-bottom: 8px;
+              margin: 0;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            }
+            .studio-badge-xp {
+              background: #ede9fe;
+              color: #6366f1;
+              padding: 2px 8px;
+              border-radius: 6px;
+              font-weight: 700;
+              font-size: 11px;
+            }
+            .studio-badge-crc {
+              background: #fff4dc;
+              color: #b9820a;
+              padding: 2px 8px;
+              border-radius: 6px;
+              font-weight: 700;
+              font-size: 11px;
+            }
+            .fase-item-card {
+              padding: 12px;
+              border-radius: 12px;
+              border: 1px solid var(--border);
+              background: var(--surface);
+              cursor: pointer;
+              transition: border-color 0.2s, background 0.2s;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              gap: 12px;
+            }
+            .fase-item-card:hover {
+              background: var(--soft);
+              border-color: var(--muted);
+            }
+            .fase-item-card.selected {
+              background: var(--cream);
+              border-color: var(--yellow);
+              box-shadow: 0 0 0 2px var(--yellow);
+            }
+            
+            /* Empty placeholder */
+            .studio-empty-state {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              text-align: center;
+              padding: 60px 20px;
+              color: var(--muted);
+              flex-grow: 1;
+            }
+            .studio-empty-state i {
+              font-size: 48px;
+              color: var(--muted);
+              margin-bottom: 16px;
+              opacity: 0.7;
+            }
+            .studio-empty-state h3 {
+              font-size: 18px;
+              font-weight: 700;
+              color: var(--ink);
+              margin-bottom: 8px;
+            }
+            .studio-empty-state p {
+              font-size: 13px;
+              max-width: 280px;
+              margin: 0;
+            }
+            
+            /* File upload box style */
+            .studio-upload-box {
+              border: 2px dashed var(--border);
+              border-radius: var(--r-input);
+              padding: 16px;
+              text-align: center;
+              background: var(--soft);
+              cursor: pointer;
+              transition: border-color 0.2s, background 0.2s;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              gap: 8px;
+            }
+            .studio-upload-box:hover {
+              border-color: var(--yellow);
+              background: var(--surface);
+            }
+            .studio-upload-preview {
+              max-width: 100%;
+              max-height: 90px;
+              border-radius: 8px;
+              border: 1px solid var(--border);
+              object-fit: cover;
+              margin-top: 4px;
+            }
+            
+            /* Cards de Perguntas Retráteis (Collapsible) */
+            .pergunta-item-card {
+              border: 1px solid var(--border);
+              border-radius: 16px;
+              padding: 20px;
+              background: var(--surface);
+              margin-bottom: 16px;
+              box-shadow: var(--sh);
+              display: flex;
+              flex-direction: column;
+              gap: 16px;
+              transition: border-color 0.18s, background 0.18s;
+            }
+            .pergunta-item-card.collapsed {
+              padding: 12px 18px;
+              background: var(--soft);
+              border-color: var(--border);
+              gap: 0;
+            }
+            .pergunta-item-card.collapsed:hover {
+              background: var(--surface);
+              border-color: var(--muted);
+            }
+            .pergunta-card-head {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              font-weight: 700;
+              font-size: 13px;
+              color: var(--ink);
+              cursor: pointer;
+              user-select: none;
+            }
+            .pergunta-item-card.collapsed .pergunta-card-body-content {
+              display: none !important;
+            }
+            .help-note {
+              font-size: 11px;
+              color: var(--muted);
+              font-style: italic;
+              margin-top: 2px;
+            }
+          </style>
+
+          <!-- ESTADO 1: DASHBOARD DE CAMPANHAS -->
+          <div id="cd-dashboard">
+            <div class="cd-dashboard-head">
+              <div>
+                <h1>Campanhas de Desafios</h1>
+                <p style="color: var(--muted); font-size: 14px; margin-top: 4px;">Crie trilhas gamificadas de aprendizagem com moedas, pontuação e fluxos de perguntas dinâmicas.</p>
+              </div>
+              <button type="button" id="btn-cd-nova" style="display: flex; align-items: center; gap: 6px;"><i class="ph-fill ph-plus-circle"></i> Nova Campanha</button>
+            </div>
+            
+            <p id="cd-dashboard-aviso" class="aviso"></p>
+            <ul id="camp-desafios-lista" class="cd-grid">
+              <!-- Grid de campanhas carregado dinamicamente -->
+            </ul>
+          </div>
+
+          <!-- ESTADO 2: STUDIO WORKSPACE (Unified Editing) -->
+          <div id="cd-studio" class="cd-studio" hidden>
+            <div class="cd-studio-header">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <button type="button" class="link" id="btn-cd-voltar" style="font-size: 14px; display: flex; align-items: center; gap: 4px;"><i class="ph-fill ph-arrow-left"></i> Voltar para Campanhas</button>
+                <span style="color: var(--border);">|</span>
+                <h2 id="cd-studio-titulo" style="font-size: 18px; margin: 0; font-weight: 700;">Studio de Desafios</h2>
+              </div>
+              <p id="cd-studio-aviso" class="aviso" style="margin: 0;"></p>
+            </div>
+            
+            <div class="cd-studio-layout">
+              <!-- COLUNA ESQUERDA: Campanha & Fases -->
+              <div class="cd-studio-left">
+                
+                <!-- Ajustes Gerais da Campanha -->
+                <div class="studio-block">
+                  <h3 class="studio-block-title"><i class="ph-fill ph-gear" style="margin-right: 8px; vertical-align: middle;"></i> Configurações da Campanha</h3>
+                  <form id="form-studio-campanha" style="display: flex; flex-direction: column; gap: 12px;">
+                    <input type="hidden" id="studio-cd-id" />
+                    
+                    <div class="field">
+                      <label for="studio-cd-nome">Nome da Campanha</label>
+                      <input id="studio-cd-nome" placeholder="Ex: 🎓 Integração de Novos Colaboradores" required />
+                    </div>
+                    
+                    <div class="field">
+                      <label for="studio-cd-descricao">Descrição</label>
+                      <input id="studio-cd-descricao" placeholder="Ex: Aprenda sobre as regras e o ecossistema da empresa." />
+                    </div>
+                    
+                    <!-- Upload do Banner da Campanha -->
+                    <div class="field">
+                      <label style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <span>Imagem de Banner (Campanha)</span>
+                        <span style="font-size: 11px; font-weight: 500; color: var(--muted); background: var(--soft); padding: 2px 8px; border-radius: 6px; border: 1px solid var(--border);">Recomendado: 1200x330 (3.6:1)</span>
+                      </label>
+                      <div class="studio-upload-box" id="studio-cd-banner-box" onclick="document.getElementById('studio-cd-banner-file').click()" style="position: relative; overflow: hidden; min-height: 120px; display: flex; justify-content: center; align-items: center;">
+                        <input type="file" id="studio-cd-banner-file" accept="image/*" style="display: none;" />
+                        <input type="hidden" id="studio-cd-banner-url" />
+                        
+                        <!-- Conteúdo padrão (Sem imagem) -->
+                        <div id="studio-cd-banner-default" style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+                          <i class="ph-fill ph-image" style="font-size: 24px; color: var(--muted);"></i>
+                          <span id="studio-cd-banner-text" style="font-size: 12px; font-weight: 600;">Clique para carregar banner...</span>
+                        </div>
+                        
+                        <!-- Conteúdo com Imagem (Fundo) -->
+                        <div id="studio-cd-banner-preview" style="position: absolute; inset: 0; background-size: cover; background-position: center; display: none;">
+                          <!-- Botão de remover flutuante -->
+                          <button type="button" id="btn-remove-cd-banner" title="Remover Banner" style="position: absolute; top: 8px; right: 8px; width: 30px; height: 30px; border-radius: 50%; background: rgba(220, 38, 38, 0.9); color: white; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: background 0.2s; z-index: 10;">
+                            <i class="ph-fill ph-trash" style="font-size: 14px;"></i>
+                          </button>
+                        </div>
+                      </div>
+                      <input type="text" id="studio-cd-banner-url-text" placeholder="Ou cole a URL da imagem aqui..." style="margin-top: 8px; font-size: 12px; padding: 10px 12px; border-radius: var(--r-input); border: 1px solid var(--border); background: var(--surface); color: var(--ink); outline: none; width: 100%;" />
+                      <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
+                        <label for="studio-cd-banner-fit" style="font-size: 11px; font-weight: 700; color: var(--muted); margin: 0; white-space: nowrap;">Ajuste da Imagem:</label>
+                        <select id="studio-cd-banner-fit" style="font-size: 11px; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); outline: none; flex-grow: 1; height: 28px;">
+                          <option value="cover">Preencher (Cover)</option>
+                          <option value="contain">Ajustar (Contain)</option>
+                          <option value="contain-blur">Ajuste Premium (Blur)</option>
+                        </select>
+                      </div>
+                      <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px;">
+                        <label for="studio-cd-banner-ratio" style="font-size: 11px; font-weight: 700; color: var(--muted); margin: 0; white-space: nowrap;">Tamanho/Proporção:</label>
+                        <select id="studio-cd-banner-ratio" style="font-size: 11px; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); outline: none; flex-grow: 1; height: 28px;">
+                          <option value="3.5-1">Panorâmico (Fino - 3.5:1)</option>
+                          <option value="2.5-1">Clássico (Médio - 2.5:1)</option>
+                          <option value="16-9">Widescreen (Alto - 16:9)</option>
+                          <option value="4-3">Padrão (Quadrado - 4:3)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div class="form-linha">
+                      <div class="field">
+                        <label for="studio-cd-cor1">Cor Primária</label>
+                        <input id="studio-cd-cor1" type="color" value="#6366f1" style="height: 44px; padding: 4px;" />
+                      </div>
+                      <div class="field">
+                        <label for="studio-cd-cor2">Cor Secundária</label>
+                        <input id="studio-cd-cor2" type="color" value="#a78bfa" style="height: 44px; padding: 4px;" />
+                      </div>
+                    </div>
+
+                    <div class="form-linha" style="border-top: 1px solid var(--soft); padding-top: 12px; margin-top: 4px;">
+                      <div class="field">
+                        <label for="studio-cd-xp" style="display: flex; align-items: center; gap: 4px;"><i class="ph-fill ph-lightning" style="color: #6366f1;"></i> XP Geral (Recompensa)</label>
+                        <input id="studio-cd-xp" type="number" min="0" value="50" required />
+                      </div>
+                      <div class="field">
+                        <label for="studio-cd-pontos" style="display: flex; align-items: center; gap: 4px;"><i class="ph-fill ph-coins" style="color: #b9820a;"></i> CRcoins Geral</label>
+                        <input id="studio-cd-pontos" type="number" min="0" value="25" required />
+                      </div>
+                    </div>
+                    <p class="help-note" style="margin-top: -6px;">💡 Valores padrão para os desafios. Se uma fase individual tiver 0, ela usará este valor.</p>
+
+                    <div class="form-linha">
+                      <div class="field">
+                        <label for="studio-cd-inicio">Prazo de Início (Opcional)</label>
+                        <input id="studio-cd-inicio" type="datetime-local" style="padding: 10px;" />
+                      </div>
+                      <div class="field">
+                        <label for="studio-cd-fim">Prazo de Fim (Opcional)</label>
+                        <input id="studio-cd-fim" type="datetime-local" style="padding: 10px;" />
+                      </div>
+                    </div>
+
+                    <label class="form-check toggle">
+                      <input id="studio-cd-ativo" type="checkbox" checked />
+                      <span>Campanha Ativa para os usuários</span>
+                    </label>
+
+                    <button type="submit" id="btn-studio-salvar-campanha" style="margin-top: 6px;"><i class="ph-fill ph-floppy-disk" style="margin-right: 6px; vertical-align: middle;"></i> Salvar Configurações</button>
+                  </form>
+                </div>
+
+                <!-- Fases da Campanha (Trilha) -->
+                <div class="studio-block" id="studio-fases-bloco" hidden>
+                  <h3 class="studio-block-title">🗺️ Trilha de Fases (Desafios)</h3>
+                  <div style="display: flex; flex-direction: column; gap: 10px;" id="fases-studio-lista">
+                    <!-- Lista de fases cadastrada dinamicamente -->
+                  </div>
+                  <button type="button" class="btn-sec" id="btn-studio-add-fase" style="width: 100%; border: 1px dashed var(--border); padding: 12px; font-size: 13px; font-weight: 600; text-align: center; border-radius: 12px; background: var(--soft); color: var(--ink);">＋ Nova Fase (Desafio)</button>
+                </div>
+
+              </div>
+
+              <!-- COLUNA DIREITA: Editor da Fase Selecionada -->
+              <div class="cd-studio-right" id="cd-studio-right-panel">
+                <!-- Estado vazio: nenhuma fase selecionada -->
+                <div id="fase-editor-vazio" class="studio-empty-state">
+                  <i class="ph-fill ph-arrow-bend-down-left" style="font-size: 44px;"></i>
+                  <h3>Nenhuma Fase Selecionada</h3>
+                  <p>Adicione ou selecione uma fase na coluna da esquerda para gerenciar as perguntas, imagens e o fluxo de respostas.</p>
+                </div>
+
+                <!-- Fase Ativa: Editor completo de Fase + Perguntas -->
+                <div id="fase-editor-ativo" style="display: flex; flex-direction: column; gap: 24px; width: 100%;" hidden>
+                  
+                  <!-- Form da Fase -->
+                  <div style="border-bottom: 1px solid var(--border); padding-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                      <h3 style="font-size: 16px; font-weight: 700; color: var(--ink); margin: 0;"><i class="ph-fill ph-pencil-simple" style="margin-right: 8px; vertical-align: middle;"></i> Editar Ajustes da Fase</h3>
+                      <button type="button" class="link" id="btn-salvar-ajustes-fase-topo" style="color: var(--pos); font-weight: 700; font-size: 13px;"><i class="ph-fill ph-floppy-disk" style="margin-right: 4px; vertical-align: middle;"></i> Salvar Fase</button>
+                    </div>
+                    
+                    <form id="form-studio-fase" style="display: flex; flex-direction: column; gap: 12px;">
+                      <input type="hidden" id="studio-fase-id" />
+                      <div class="form-linha">
+                        <div class="field" style="flex: 2;">
+                          <label for="studio-fase-titulo">Título da Fase</label>
+                          <input id="studio-fase-titulo" placeholder="Ex: Fase 1: Introdução às Regras" required />
+                        </div>
+                        <div class="field" style="flex: 1;">
+                          <label for="studio-fase-tipo">Tipo de Desafio</label>
+                          <select id="studio-fase-tipo" style="height: 46px; border-radius: var(--r-input); border: 1px solid var(--border); padding: 10px; font-size: 13px; font-weight: 600; outline: none; background: var(--surface);">
+                            <option value="quiz">Quiz</option>
+                            <option value="verdadeiro_falso">Verdadeiro ou Falso</option>
+                            <option value="multipla_escolha">Múltipla Escolha</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div class="field">
+                        <label for="studio-fase-descricao">Descrição Curta</label>
+                        <input id="studio-fase-descricao" placeholder="Instruções breves para o jogador" />
+                      </div>
+
+                      <!-- Upload de Imagem de Capa da Fase -->
+                      <div class="field">
+                        <label style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                          <span>Imagem de Capa da Fase (Opcional)</span>
+                          <span style="font-size: 11px; font-weight: 500; color: var(--muted); background: var(--soft); padding: 2px 8px; border-radius: 6px; border: 1px solid var(--border);">Recomendado: 700x200 (3.5:1)</span>
+                        </label>
+                        <div class="studio-upload-box" id="studio-fase-imagem-box" onclick="document.getElementById('studio-fase-imagem-file').click()" style="position: relative; overflow: hidden; min-height: 100px; display: flex; justify-content: center; align-items: center;">
+                          <input type="file" id="studio-fase-imagem-file" accept="image/*" style="display: none;" />
+                          <input type="hidden" id="studio-fase-imagem-url" />
+                          
+                          <!-- Conteúdo padrão (Sem imagem) -->
+                          <div id="studio-fase-imagem-default" style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+                            <i class="ph-fill ph-image" style="font-size: 20px; color: var(--muted);"></i>
+                            <span id="studio-fase-imagem-text" style="font-size: 12px; font-weight: 600;">Clique para carregar imagem da fase...</span>
+                          </div>
+                          
+                          <!-- Conteúdo com Imagem (Fundo) -->
+                          <div id="studio-fase-imagem-preview" style="position: absolute; inset: 0; background-size: cover; background-position: center; display: none;">
+                            <!-- Botão de remover flutuante -->
+                            <button type="button" id="btn-remove-fase-imagem" title="Remover Imagem da Fase" style="position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; border-radius: 50%; background: rgba(220, 38, 38, 0.9); color: white; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: background 0.2s; z-index: 10;">
+                              <i class="ph-fill ph-trash" style="font-size: 12px;"></i>
+                            </button>
+                          </div>
+                        </div>
+                        <input type="text" id="studio-fase-imagem-url-text" placeholder="Ou cole a URL da imagem aqui..." style="margin-top: 8px; font-size: 12px; padding: 10px 12px; border-radius: var(--r-input); border: 1px solid var(--border); background: var(--surface); color: var(--ink); outline: none; width: 100%;" />
+                        <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
+                          <label for="studio-fase-imagem-fit" style="font-size: 11px; font-weight: 700; color: var(--muted); margin: 0; white-space: nowrap;">Ajuste da Imagem:</label>
+                          <select id="studio-fase-imagem-fit" style="font-size: 11px; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); outline: none; flex-grow: 1; height: 28px;">
+                            <option value="cover">Preencher (Cover)</option>
+                            <option value="contain">Ajustar (Contain)</option>
+                            <option value="contain-blur">Ajuste Premium (Blur)</option>
+                          </select>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px;">
+                          <label for="studio-fase-imagem-ratio" style="font-size: 11px; font-weight: 700; color: var(--muted); margin: 0; white-space: nowrap;">Tamanho/Proporção:</label>
+                          <select id="studio-fase-imagem-ratio" style="font-size: 11px; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); outline: none; flex-grow: 1; height: 28px;">
+                            <option value="3.5-1">Panorâmico (Fino - 3.5:1)</option>
+                            <option value="2.5-1">Clássico (Médio - 2.5:1)</option>
+                            <option value="16-9">Widescreen (Alto - 16:9)</option>
+                            <option value="4-3">Padrão (Quadrado - 4:3)</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div class="form-linha">
+                        <div class="field">
+                          <label for="studio-fase-xp" style="display: flex; align-items: center; gap: 4px;"><i class="ph-fill ph-lightning" style="color: #6366f1;"></i> XP da Fase</label>
+                          <input id="studio-fase-xp" type="number" min="0" value="0" />
+                          <span class="help-note">0 = herdar campanha</span>
+                        </div>
+                        <div class="field">
+                          <label for="studio-fase-pontos" style="display: flex; align-items: center; gap: 4px;"><i class="ph-fill ph-coins" style="color: #b9820a;"></i> CRcoins (CRC)</label>
+                          <input id="studio-fase-pontos" type="number" min="0" value="0" />
+                          <span class="help-note">0 = herdar campanha</span>
+                        </div>
+                        <div class="field">
+                          <label for="studio-fase-tempo">Tempo (segundos)</label>
+                          <input id="studio-fase-tempo" type="number" min="0" placeholder="Sem limite" />
+                          <span class="help-note">Vazio = sem limite</span>
+                        </div>
+                        <div class="field">
+                          <label for="studio-fase-tentativas">Max Tentativas</label>
+                          <input id="studio-fase-tentativas" type="number" min="1" placeholder="Ilimitado" />
+                          <span class="help-note">Vazio = ilimitado</span>
+                        </div>
+                      </div>
+
+                      <label class="form-check toggle" style="margin-top: 4px;">
+                        <input id="studio-fase-ativo" type="checkbox" checked />
+                        <span>Fase ativa (visível para os usuários)</span>
+                      </label>
+                    </form>
+                  </div>
+
+                  <!-- Seção de Perguntas da Fase -->
+                  <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                      <h3 style="font-size: 16px; font-weight: 700; color: var(--ink); margin: 0;"><i class="ph-fill ph-question" style="margin-right: 8px; vertical-align: middle;"></i> Perguntas & Fluxo Dinâmico <button type="button" id="btn-studio-guia" title="Mostrar guia rápido" style="display: none; background: none; border: none; cursor: pointer; color: #6366f1; font-size: 16px; vertical-align: middle; margin-left: 2px; padding: 2px;"><i class="ph-fill ph-info"></i></button></h3>
+                      <div style="display: flex; gap: 8px;">
+                        <button type="button" class="btn-sec" id="btn-studio-add-pergunta" style="font-size: 12px; padding: 6px 14px;"><i class="ph-fill ph-plus-circle"></i> Adicionar Pergunta</button>
+                        <button type="button" class="btn-sec" id="btn-studio-preview" style="font-size: 12px; padding: 6px 14px;"><i class="ph-fill ph-play-circle"></i> Pré-visualizar</button>
+                        <button type="button" class="btn" id="btn-studio-save-all" style="font-size: 12px; padding: 6px 14px; background: var(--theme-color, #6366f1); color: white;"><i class="ph-fill ph-floppy-disk"></i> Salvar Fase</button>
+                      </div>
+                    </div>
+
+                    <p id="studio-perguntas-aviso" class="aviso"></p>
+
+                    <!-- Bloco Informativo de Ajuda UX (dispensável) -->
+                    <div id="studio-guia" style="background: rgba(99, 102, 241, 0.04); border: 1px solid rgba(99, 102, 241, 0.15); border-radius: 12px; padding: 14px 18px; margin-bottom: 16px; font-size: 13px; line-height: 1.5; color: var(--ink); position: relative;">
+                      <button type="button" id="btn-studio-guia-fechar" title="Fechar guia (não mostrar mais)" style="position: absolute; top: 10px; right: 10px; background: none; border: none; cursor: pointer; color: var(--muted); font-size: 14px; line-height: 1; padding: 4px;"><i class="ph-fill ph-x"></i></button>
+                      <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: #4f46e5; margin-bottom: 6px;">
+                        <i class="ph-fill ph-info" style="font-size: 18px;"></i>
+                        <span>Guia Rápido: Como Montar seu Desafio Facilmente</span>
+                      </div>
+                      <ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; color: var(--muted); list-style-type: disc;">
+                        <li><b>Salvar Fase (tudo de uma vez):</b> Edite os ajustes da fase e quantas perguntas quiser e clique em <b>"<i class="ph-fill ph-floppy-disk" style="margin-right: 4px; vertical-align: middle;"></i> Salvar Fase"</b> (no topo ou no fim) — ajustes e perguntas são gravados juntos. Enquanto você edita, um rascunho é guardado no navegador, então não perde o trabalho se cair a conexão.</li>
+                        <li><b>Reordenar e excluir:</b> Use as setas ↑ ↓ no topo de cada pergunta (e de cada fase) para reordenar. Adicionar, reordenar e excluir não gravam nada até você clicar em "Salvar Fase".</li>
+                        <li><b>Alternativa Correta:</b> Clique no botão de letra (<b>A, B, C...</b>) do lado esquerdo da alternativa para marcá-la como a correta (ficará <span style="color: var(--pos); font-weight: 700;">verde</span>).</li>
+                        <li><b>Fluxo de Perguntas (Ir para):</b> Por padrão, o fluxo é linear (responde e vai para a próxima). Para fazer caminhos dinâmicos baseados nas respostas, altere a opção <b>"Ir para"</b> de qualquer alternativa!</li>
+                      </ul>
+                    </div>
+
+                    <div id="perguntas-studio-lista" style="display: flex; flex-direction: column; gap: 16px;">
+                      <!-- Lista de perguntas do desafio carregada dinamicamente -->
+                    </div>
+                    
+                    <div style="display: flex; gap: 12px; margin-top: 16px;">
+                      <button type="button" class="btn-sec" id="btn-studio-add-pergunta-fim" style="flex: 1; border: 1px dashed var(--border); padding: 12px; font-size: 13px; font-weight: 600; text-align: center; border-radius: 12px; background: var(--soft); color: var(--ink);">＋ Adicionar Pergunta</button>
+                      <button type="button" class="btn" id="btn-studio-save-all-fim" style="flex: 1; padding: 12px; font-size: 13px; font-weight: 700; text-align: center; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--theme-color, #6366f1); color: white;"><i class="ph-fill ph-floppy-disk"></i> Salvar Fase</button>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- COMUNICADOS / ANÚNCIOS -->
+        <section class="sec" data-sec="anuncios-admin" hidden>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h1>Comunicados & Novidades</h1>
+            <button type="button" class="btn" id="btn-anuncio-novo" style="font-size: 13px; padding: 8px 16px;"><i class="ph-fill ph-plus-circle"></i> Novo Comunicado</button>
+          </div>
+
+          <div id="anuncio-editor-bloco" class="bloco" hidden style="margin-bottom: 24px;">
+            <h2 id="anuncio-form-titulo">Novo Comunicado</h2>
+            <form id="form-anuncio" style="display: flex; flex-direction: column; gap: 16px;">
+              <input type="hidden" id="anuncio-id" />
+              
+              <div class="field">
+                <label for="anuncio-titulo">Título do Comunicado</label>
+                <input id="anuncio-titulo" placeholder="Ex: Loja na versão 5.2!" required />
+              </div>
+
+              <div class="field">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+                  <label for="anuncio-conteudo" style="margin: 0;">Conteúdo (Markdown)</label>
+                  <button type="button" class="btn-secundario" id="btn-markdown-ajuda" style="font-size: 11px; padding: 4px 8px; height: 26px; display: inline-flex; align-items: center; gap: 4px; border-radius: 6px;"><i class="ph-fill ph-question" style="font-size: 14px;"></i> Guia de Formatação</button>
+                </div>
+                <textarea id="anuncio-conteudo" rows="6" placeholder="Escreva o texto das novidades aqui..." required style="width: 100%; border-radius: var(--r-input); border: 1px solid var(--border); padding: 12px; font-family: inherit; font-size: 13px; outline: none; background: var(--surface); color: var(--ink); resize: vertical;"></textarea>
+                <span style="font-size: 11px; color: var(--muted); margin-top: 4px; display: block; line-height: 1.4;">
+                  💡 <b>Dicas de formatação (Markdown):</b> Use <code>**negrito**</code>, <code>*itálico*</code>, quebras de linha normais, <code>- item</code> (para listas) ou <code>[texto do link](url)</code> para criar links.
+                </span>
+              </div>
+
+              <div class="form-linha">
+                <div class="field" style="flex: 2;">
+                  <label>Imagem do Comunicado (Opcional)</label>
+                  
+                  <!-- Box de Preview/Upload -->
+                  <div class="studio-upload-box" id="anuncio-imagem-box" onclick="if(event.target.tagName !== 'BUTTON' && event.target.closest('button') === null) document.getElementById('anuncio-imagem-file').click();" style="position: relative; overflow: hidden; min-height: 120px; display: flex; justify-content: center; align-items: center; border: 2px dashed var(--border); border-radius: var(--r-input); background: var(--surface); cursor: pointer; transition: border-color 0.2s;">
+                    <!-- Estado Inicial (Vazio) -->
+                    <div id="anuncio-imagem-default" style="display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--muted); padding: 20px;">
+                      <i class="ph-fill ph-image" style="font-size: 32px; color: var(--muted);"></i>
+                      <span id="anuncio-imagem-text" style="font-size: 12px; font-weight: 500;">Clique para carregar imagem do comunicado...</span>
+                    </div>
+                    <!-- Estado com Imagem (Preview) -->
+                    <div id="anuncio-imagem-preview" style="display: none; position: absolute; inset: 0; background-size: cover; background-position: center; background-repeat: no-repeat;">
+                      <!-- Botão Excluir Imagem -->
+                      <button type="button" class="btn-remove-imagem" id="btn-remove-anuncio-imagem" style="position: absolute; top: 10px; right: 10px; background: var(--neg); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.2); transition: transform 0.1s;"><i class="ph-fill ph-trash" style="font-size: 12px;"></i></button>
+                    </div>
+                  </div>
+                  
+                  <input type="file" id="anuncio-imagem-file" accept="image/*" style="display: none;" />
+                  <input type="hidden" id="anuncio-imagem-url" />
+                  
+                  <div style="display: flex; gap: 8px; margin-top: 8px;">
+                    <input type="text" id="anuncio-imagem-url-text" placeholder="Cole a URL da imagem aqui..." style="flex-grow: 1; font-size: 12px;" />
+                  </div>
+                </div>
+                
+                <div class="field" style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
+                  <label>Cor Temática</label>
+                  
+                  <!-- Paleta de Cores Preset -->
+                  <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 4px; min-height: 38px;">
+                    <span class="cor-preset-circle" data-cor="#6366f1" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'" style="background: #6366f1; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; display: inline-block; border: 2px solid transparent; transition: transform 0.1s; box-shadow: 0 1px 3px rgba(0,0,0,0.15);"></span>
+                    <span class="cor-preset-circle" data-cor="#a855f7" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'" style="background: #a855f7; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; display: inline-block; border: 2px solid transparent; transition: transform 0.1s; box-shadow: 0 1px 3px rgba(0,0,0,0.15);"></span>
+                    <span class="cor-preset-circle" data-cor="#3b82f6" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'" style="background: #3b82f6; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; display: inline-block; border: 2px solid transparent; transition: transform 0.1s; box-shadow: 0 1px 3px rgba(0,0,0,0.15);"></span>
+                    <span class="cor-preset-circle" data-cor="#10b981" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'" style="background: #10b981; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; display: inline-block; border: 2px solid transparent; transition: transform 0.1s; box-shadow: 0 1px 3px rgba(0,0,0,0.15);"></span>
+                    <span class="cor-preset-circle" data-cor="#f97316" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'" style="background: #f97316; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; display: inline-block; border: 2px solid transparent; transition: transform 0.1s; box-shadow: 0 1px 3px rgba(0,0,0,0.15);"></span>
+                    <span class="cor-preset-circle" data-cor="#ef4444" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'" style="background: #ef4444; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; display: inline-block; border: 2px solid transparent; transition: transform 0.1s; box-shadow: 0 1px 3px rgba(0,0,0,0.15);"></span>
+                    
+                    <!-- Seletor Customizado -->
+                    <div style="position: relative; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">
+                      <button type="button" id="btn-anuncio-cor-custom" onclick="document.getElementById('anuncio-cor').click()" style="width: 24px; height: 24px; border-radius: 50%; border: 1px dashed var(--border); background: var(--surface); display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; transition: all 0.2s;" title="Cor Personalizada">
+                        <i class="ph-fill ph-palette" style="font-size: 12px; color: var(--muted);"></i>
+                      </button>
+                      <input id="anuncio-cor" type="color" value="#6366f1" style="position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0;" />
+                    </div>
+                  </div>
+                  
+                  <div style="margin-top: 6px; display: flex; flex-direction: column; gap: 6px;">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                      <label for="anuncio-imagem-fit" style="font-size: 10px; font-weight: 700; color: var(--muted); margin: 0; white-space: nowrap;">Ajuste:</label>
+                      <select id="anuncio-imagem-fit" style="font-size: 11px; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); outline: none; flex-grow: 1; height: 26px;">
+                        <option value="cover">Preencher (Cover)</option>
+                        <option value="contain">Ajustar (Contain)</option>
+                        <option value="contain-blur">Ajuste Premium (Blur)</option>
+                      </select>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                      <label for="anuncio-imagem-ratio" style="font-size: 10px; font-weight: 700; color: var(--muted); margin: 0; white-space: nowrap;">Tamanho:</label>
+                      <select id="anuncio-imagem-ratio" style="font-size: 11px; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); outline: none; flex-grow: 1; height: 26px;">
+                        <option value="3.5-1">Fino (3.5:1)</option>
+                        <option value="2.5-1">Médio (2.5:1)</option>
+                        <option value="16-9">Widescreen (16:9)</option>
+                        <option value="4-3">Padrão (4:3)</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-linha">
+                <div class="field">
+                  <label for="anuncio-inicio">Prazo de Início</label>
+                  <input id="anuncio-inicio" type="datetime-local" required style="padding: 10px;" />
+                </div>
+                <div class="field">
+                  <label for="anuncio-fim">Prazo de Fim (Opcional)</label>
+                  <input id="anuncio-fim" type="datetime-local" style="padding: 10px;" />
+                </div>
+              </div>
+
+              <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 16px; margin-top: 8px;">
+                <label class="form-check toggle" style="margin: 0;">
+                  <input id="anuncio-ativo" type="checkbox" checked />
+                  <span>Comunicado Ativo</span>
+                </label>
+                
+                <div style="display: flex; gap: 8px;">
+                  <button type="button" class="btn-secundario" id="btn-anuncio-cancelar" style="padding: 10px 18px;">Cancelar</button>
+                  <button type="button" class="btn-secundario" id="btn-anuncio-preview" style="padding: 10px 18px; display: flex; align-items: center; gap: 6px;"><i class="ph-fill ph-eye" style="font-size: 16px;"></i> Visualizar</button>
+                  <button type="submit" id="btn-anuncio-salvar" style="padding: 10px 24px;">Salvar Comunicado</button>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <div class="bloco">
+            <h2>Histórico de Comunicados</h2>
+            <p id="anuncio-lista-aviso" class="aviso"></p>
+            <ul id="anuncios-admin-lista" class="lista-usuarios" style="display: flex; flex-direction: column; gap: 12px; margin-top: 12px;">
+              <!-- Lista de anúncios gerenciada via JS -->
+            </ul>
+          </div>
+        </section>
+      </div>
     </main>
 
     <!-- Modal de edição de produto -->
@@ -288,6 +1053,101 @@
             <button type="submit" id="medit-salvar">Salvar alterações</button>
             <p id="medit-aviso" class="aviso"></p>
           </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL GUIA MARKDOWN -->
+    <div id="modal-markdown-guia" class="modal-bg" hidden style="z-index: 100000;">
+      <div class="modal" style="max-width: 550px; padding: 24px; border-radius: 16px;">
+        <div class="modal-head" style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+          <h3 style="margin: 0; font-size: 16px; font-weight: 800; color: var(--ink); display: flex; align-items: center; gap: 8px;"><i class="ph-fill ph-book-open" style="color: var(--primary); font-size: 20px;"></i> Guia de Formatação Markdown</h3>
+          <button class="modal-close" id="btn-fechar-markdown-guia" type="button" style="font-size: 16px; background: none; border: none; cursor: pointer; color: var(--muted);">✕</button>
+        </div>
+        <div class="modal-body" style="max-height: 400px; overflow-y: auto; padding-right: 4px;">
+          <p style="font-size: 13px; color: var(--muted); margin-bottom: 16px; line-height: 1.5;">
+            O anunciador utiliza o motor oficial <b>marked.js</b>, garantindo suporte a 100% da sintaxe padrão do Markdown:
+          </p>
+          <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
+            <thead>
+              <tr style="border-bottom: 2px solid var(--border);">
+                <th style="padding: 8px 4px; color: var(--ink); font-weight: 700; width: 110px;">Elemento</th>
+                <th style="padding: 8px 4px; color: var(--ink); font-weight: 700;">Como Escrever</th>
+                <th style="padding: 8px 4px; color: var(--ink); font-weight: 700; width: 150px;">Resultado Visual</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 8px 4px; font-weight: 600;">Negrito</td>
+                <td style="padding: 8px 4px;"><code>**texto**</code> ou <code>__texto__</code></td>
+                <td style="padding: 8px 4px; font-weight: 800; color: var(--ink);">texto</td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 8px 4px; font-weight: 600;">Itálico</td>
+                <td style="padding: 8px 4px;"><code>*texto*</code> ou <code>_texto_</code></td>
+                <td style="padding: 8px 4px; font-style: italic;">texto</td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 8px 4px; font-weight: 600;">Títulos (H1 - H3)</td>
+                <td style="padding: 8px 4px;"><code># Título 1</code><br><code>## Título 2</code><br><code>### Título 3</code></td>
+                <td style="padding: 8px 4px;"><span style="font-weight: 800; color: var(--ink); font-size: 13px;">Título do Bloco</span></td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 8px 4px; font-weight: 600;">Links</td>
+                <td style="padding: 8px 4px;"><code>[Texto](https://site.com)</code></td>
+                <td style="padding: 8px 4px;"><a href="#" onclick="event.preventDefault()" style="color: #6366f1; text-decoration: underline; font-weight: 700;">Texto</a></td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 8px 4px; font-weight: 600;">Lista Simples</td>
+                <td style="padding: 8px 4px;"><code>- Item A</code><br><code>- Item B</code></td>
+                <td style="padding: 8px 4px; padding-left: 12px;">• Item A<br>• Item B</td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 8px 4px; font-weight: 600;">Lista Numerada</td>
+                <td style="padding: 8px 4px;"><code>1. Primeiro</code><br><code>2. Segundo</code></td>
+                <td style="padding: 8px 4px;">1. Primeiro<br>2. Segundo</td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 8px 4px; font-weight: 600;">Citação</td>
+                <td style="padding: 8px 4px;"><code>&gt; Texto citado</code></td>
+                <td style="padding: 8px 4px; border-left: 3px solid var(--border); padding-left: 8px; color: var(--muted); font-style: italic;">Texto citado</td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 8px 4px; font-weight: 600;">Código Inline</td>
+                <td style="padding: 8px 4px;"><code>\`código\`</code></td>
+                <td style="padding: 8px 4px;"><code style="background: var(--canvas); padding: 2px 4px; border-radius: 4px; font-family: monospace;">código</code></td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 8px 4px; font-weight: 600;">Bloco de Código</td>
+                <td style="padding: 8px 4px;"><code>\`\`\`</code><br><code>código</code><br><code>\`\`\`</code></td>
+                <td style="padding: 8px 4px;"><pre style="background: var(--canvas); padding: 4px; border-radius: 4px; font-family: monospace; font-size: 10px; margin: 0;">código</pre></td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 8px 4px; font-weight: 600;">Linha Divisória</td>
+                <td style="padding: 8px 4px;"><code>---</code></td>
+                <td style="padding: 8px 4px;"><hr style="border: none; border-top: 1px solid var(--border); margin: 0;"></td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 8px 4px; font-weight: 600;">Imagens</td>
+                <td style="padding: 8px 4px;"><code>![legenda](url_imagem)</code></td>
+                <td style="padding: 8px 4px; color: var(--muted); font-size: 11px;">Exibe a imagem no corpo</td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 8px 4px; font-weight: 600;">Escapar Símbolo</td>
+                <td style="padding: 8px 4px;"><code>\*texto\*</code></td>
+                <td style="padding: 8px 4px;">*texto* (mostra estrelas)</td>
+              </tr>
+            </tbody>
+          </table>
+          
+          <div style="margin-top: 16px; padding: 12px; border-radius: 8px; background: var(--canvas); border: 1px solid var(--border); text-align: center;">
+            <p style="font-size: 12px; color: var(--muted); margin: 0; line-height: 1.4;">
+              💡 Para acessar o guia completo com exemplos avançados, visite o <a href="https://www.markdownguide.org/basic-syntax/" target="_blank" style="color: #6366f1; text-decoration: underline; font-weight: 700;">Guia de Sintaxe Básica do Markdown</a>.
+            </p>
+          </div>
+        </div>
+        <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+          <button type="button" class="btn" id="btn-entendido-markdown-guia" style="padding: 10px 20px; border-radius: 12px; font-weight: 700;">Fechar</button>
         </div>
       </div>
     </div>
